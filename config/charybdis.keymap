@@ -59,7 +59,7 @@
 &kp TAB       &kp Q        &kp W        &kp E        &kp R        &kp T           &kp Y        &kp U        &kp I        &kp O        &kp P           &kp LEFT_BRACE
 &kp LCTRL     &kp A        &kp S        &kp D        &kp F        &kp G           &kp H        &kp J        &kp K        &kp L        &kp SEMI        &kp SQT
 &kp LSHIFT    &kp Z        &kp X        &kp C        &kp V        &kp B           &kp N        &kp M        &kp COMMA    &kp PERIOD   &kp FSLH        &kp RSHIFT
-                                        &mo POINTER  &mo SYMBOLS  &kp SPACE       &kp ENTER    &kp BACKSPACE
+                                        &mo POINTER  &mo SYMBOLS  &kp SPACE       &kp BACKSPACE &kp ENTER
                                                      &kp LALT     &kp LGUI        &kp RALT
             >;
         };
@@ -67,11 +67,11 @@
         symbols_layer {
             display-name = "Symbols";
             bindings = <
-&trans     &kp F1          &kp F2     &kp F3                &kp F4                  &kp F5          &kp F6    &kp F7       &kp F8       &kp F9      &kp F10   &mo DANGER
-&trans     &kp TILDE       &kp GRAVE  &kp LEFT_BRACE        &kp RIGHT_BRACE         &kp F11         &kp F12   &none        &kp UP       &none       &none     &none
-&trans     &kp MINUS       &kp EQUAL  &kp LEFT_PARENTHESIS  &kp RIGHT_PARENTHESIS   &kp PAGE_UP     &kp HOME  &kp LEFT     &kp DOWN     &kp RIGHT   &none     &none
-&trans     &kp UNDERSCORE  &kp PLUS   &kp LEFT_BRACKET      &kp RIGHT_BRACKET       &kp PAGE_DOWN   &kp END   &kp C_VOL_DN &kp C_VOL_UP &kp C_MUTE  &none     &trans
-                                      &none                 &trans                  &trans          &trans    &kp DELETE
+&trans     &kp F1          &kp F2     &kp F3                &kp F4                  &kp F5          &kp F6       &kp F7       &kp F8        &kp F9           &kp F10   &mo DANGER
+&trans     &kp TILDE       &kp GRAVE  &kp LEFT_BRACE        &kp RIGHT_BRACE         &kp F11         &kp F12      &none        &kp UP        &none            &none     &none
+&trans     &kp MINUS       &kp EQUAL  &kp LEFT_PARENTHESIS  &kp RIGHT_PARENTHESIS   &kp PAGE_UP     &kp C_VOL_UP &kp LEFT     &kp DOWN      &kp RIGHT        &none     &none
+&trans     &kp UNDERSCORE  &kp PLUS   &kp LEFT_BRACKET      &kp RIGHT_BRACKET       &kp PAGE_DOWN   &kp C_VOL_DN &none        &kp LESS_THAN &kp GREATER_THAN &none     &trans
+                                      &none                 &trans                  &trans          &DELETE    &trans
                                                             &trans                  &trans          &trans
             >;
         };
