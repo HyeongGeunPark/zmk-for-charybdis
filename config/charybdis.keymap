@@ -55,37 +55,15 @@
 
         amethyst: amethyst {
             compatible = "zmk,behavior-hold-tap";
-            #binding-cells = <0>;
+            #binding-cells = <2>;
             flavor = "tap-preferred";
             tapping-term-ms = <225>;
-            bindings = <&amethyst_mods &amethyst_escape>;
+            bindings = <&kp &kp>;
             display-name = "Amethyst";
         };
     };
 
     macros {
-        amethyst_mods: amethyst_mods {
-            compatible = "zmk,behavior-macro";
-            #binding-cells = <0>;
-            bindings = <
-                &macro_press
-                &kp LSHIFT
-                &kp LALT
-                &macro_pause_for_release
-                &macro_release
-                &kp LALT
-                &kp LSHIFT
-            >;
-            display-name = "Shift Alt";
-        };
-
-        amethyst_escape: amethyst_escape {
-            compatible = "zmk,behavior-macro";
-            #binding-cells = <0>;
-            bindings = <&kp ESC>;
-            display-name = "Escape";
-        };
-
         vi_select_block: vi_select_block {
             compatible = "zmk,behavior-macro";
             #binding-cells = <0>;
@@ -122,7 +100,7 @@
 &kp MINUS     &mt LCTRL A  &mt LALT S   &mt LGUI D   &kp F        &kp G           &kp H        &kp J        &mt RGUI K   &mt LALT L   &mt RCTRL SEMI  &kp SQT
 &mo POINTER   &kp Z        &kp X        &kp C        &kp V        &kp B           &kp N        &kp M        &kp COMMA    &kp PERIOD   &kp FSLH        &caps_word
                                              &kp LSHIFT   &mo SYMBOLS   &kp ENTER    &kp SPACE   &kp BACKSPACE
-                                                          &kp LGUI      &kp LCTRL    &amethyst
+                                                          &kp LGUI      &kp LCTRL    &amethyst LS(LALT) ESC
             >;
         };
 
