@@ -6,14 +6,14 @@
 
 #define BASE 0
 #define SYMBOLS 1
-#define UTILITY 2
-#define POINTER 3
-#define DANGER 4
+// #define UTILITY 2
+#define POINTER 2
+#define DANGER 3
 
 #if defined(CONFIG_SHIELD_CHARYBDIS_RIGHT)
 &trackball {
     scroll-layers = <>;
-    snipe-layers = <POINTER>;
+    snipe-layers = <>;
     runtime-default-cpi = <400>;
     runtime-default-snipe-cpi = <400>;
 };
@@ -35,12 +35,6 @@
     status = "disabled";
 };
 
-&mt {
-    tapping-term-ms = <225>;
-    flavor = "balanced";
-    quick-tap-ms = <150>;
-};
-
 / {
     chosen {
         /delete-property/ zmk,underglow;
@@ -53,40 +47,6 @@
             display-name = "PMW3610 Runtime";
         };
 
-        amethyst: amethyst {
-            compatible = "zmk,behavior-hold-tap";
-            #binding-cells = <2>;
-            flavor = "tap-preferred";
-            tapping-term-ms = <225>;
-            bindings = <&kp &kp>;
-            display-name = "Amethyst";
-        };
-    };
-
-    macros {
-        vi_select_block: vi_select_block {
-            compatible = "zmk,behavior-macro";
-            #binding-cells = <0>;
-            bindings = <&kp LS(V) &kp DOLLAR &kp PERCENT>;
-            display-name = "Vim Select Block";
-        };
-
-        shift_middle: shift_middle {
-            compatible = "zmk,behavior-macro";
-            #binding-cells = <0>;
-            bindings = <
-                &macro_press
-                &kp LSHIFT
-                &pmw PMW_SNIPE_SUPPRESS
-                &mkp MB3
-                &macro_pause_for_release
-                &macro_release
-                &mkp MB3
-                &pmw PMW_SNIPE_SUPPRESS
-                &kp LSHIFT
-            >;
-            display-name = "Shift Middle Click";
-        };
     };
 
     keymap {
@@ -95,27 +55,28 @@
         base_layer {
             display-name = "Base";
             bindings = <
-&kp ESC       &kp N1       &kp N2       &kp N3       &kp N4       &kp N5          &kp N6       &kp N7       &kp N8       &kp N9       &kp N0          &kp EQUAL
-&kp TAB       &kp Q        &kp W        &kp E        &kp R        &kp T           &kp Y        &kp U        &kp I        &kp O        &kp P           &kp BSLH
-&kp MINUS     &mt LCTRL A  &mt LALT S   &mt LGUI D   &kp F        &kp G           &kp H        &kp J        &mt RGUI K   &mt LALT L   &mt RCTRL SEMI  &kp SQT
-&mo POINTER   &kp Z        &kp X        &kp C        &kp V        &kp B           &kp N        &kp M        &kp COMMA    &kp PERIOD   &kp FSLH        &caps_word
-                                             &kp LSHIFT   &mo SYMBOLS   &kp ENTER    &kp SPACE   &kp BACKSPACE
-                                                          &kp LGUI      &kp LCTRL    &amethyst LS(LALT) ESC
+&kp ESC       &kp N1       &kp N2       &kp N3       &kp N4       &kp N5          &kp N6       &kp N7       &kp N8       &kp N9       &kp N0          &kp BSLH
+&kp TAB       &kp Q        &kp W        &kp E        &kp R        &kp T           &kp Y        &kp U        &kp I        &kp O        &kp P           &kp LEFT_BRACE
+&kp LCTRL     &kp A        &kp S        &kp D        &kp F        &kp G           &kp H        &kp J        &kp K        &kp L        &kp SEMI        &kp SQT
+&kp LSHIFT    &kp Z        &kp X        &kp C        &kp V        &kp B           &kp N        &kp M        &kp COMMA    &kp PERIOD   &kp FSLH        &kp RSHIFT
+                                        &mo POINTER  &mo SYMBOLS  &kp SPACE       &kp ENTER    &kp BACKSPACE
+                                                     &kp LALT     &kp LGUI        &kp RALT
             >;
         };
 
         symbols_layer {
             display-name = "Symbols";
             bindings = <
-&kp LC(UP)       &kp F1       &kp F2       &kp F3       &kp F4       &kp F5                &kp F6          &kp F7       &kp F8            &kp F9       &kp F10       &kp F11
-&none            &kp LS(ENTER) &kp AT_SIGN  &kp LEFT_BRACE &kp RIGHT_BRACE &vi_select_block      &kp LS(LA(MINUS)) &kp PLUS     &kp ASTERISK      &kp EXCLAMATION &kp RIGHT_BRACKET &kp F12
-&none            &kp HASH     &kp DOLLAR   &kp LEFT_PARENTHESIS &kp RIGHT_PARENTHESIS &kp TAB       &kp MINUS       &kp EQUAL    &kp GREATER_THAN  &kp PIPE     &kp TILDE     &kp FSLH
-&kp DELETE       &kp PERCENT  &kp CARET    &kp LEFT_BRACKET &kp RIGHT_BRACKET &kp GRAVE             &kp AMPERSAND   &kp LEFT     &kp DOWN          &kp UP       &kp RIGHT     &none
-                                                         &kp LC(B)   &trans       &kp CAPSLOCK    &kp SPACE   &kp ESC
-                                                                     &kp GLOBE   &mo DANGER     &kp LS(ENTER)
+&trans     &kp F1          &kp F2     &kp F3                &kp F4                  &kp F5          &kp F6    &kp F7       &kp F8       &kp F9      &kp F10   &mo DANGER
+&trans     &kp TILDE       &kp GRAVE  &kp LEFT_BRACE        &kp RIGHT_BRACE         &kp F11         &kp F12   &none        &kp UP       &none       &none     &none
+&trans     &kp MINUS       &kp EQUAL  &kp LEFT_PARENTHESIS  &kp RIGHT_PARENTHESIS   &kp PAGE_UP     &kp HOME  &kp LEFT     &kp DOWN     &kp RIGHT   &none     &none
+&trans     &kp UNDERSCORE  &kp PLUS   &kp LEFT_BRACKET      &kp RIGHT_BRACKET       &kp PAGE_DOWN   &kp END   &kp C_VOL_DN &kp C_VOL_UP &kp C_MUTE  &none     &trans
+                                      &none                 &trans                  &trans          &trans    &kp DELETE
+                                                            &trans                  &trans          &trans
             >;
         };
 
+        /*
         utility_layer {
             display-name = "Utility";
             bindings = <
@@ -127,29 +88,31 @@
                                                                   &kp LGUI    &kp LCTRL    &kp LALT
             >;
         };
+        */
 
         pointer_layer {
             display-name = "Pointer";
             bindings = <
-&to BASE       &none          &none       &none       &none       &bootloader                  &bootloader  &none       &none       &none       &none       &to UTILITY
-&none          &kp LC(LEFT)   &kp LG(W)   &kp LC(RIGHT) &pmw PMW_CPI_INC &pmw PMW_CPI_DEC      &kp PLUS     &kp N7      &kp N8      &kp N9      &kp ASTERISK &kp FSLH
-&kp LGUI       &kp LG(A)      &kp LG(S)   &none       &kp LG(F)   &pmw PMW_SNIPE_CPI_INC       &kp MINUS    &kp N4      &kp N5      &kp N6      &kp ENTER    &mkp MB1
-&trans         &pmw PMW_DRAG_SCROLL &kp LG(X) &kp LG(C) &kp LG(V) &pmw PMW_SNIPE_CPI_DEC       &kp N0       &kp N1      &kp N2      &kp N3      &kp PERIOD   &pmw PMW_SNIPE_TOGGLE
-                                                         &mkp MB1   &mkp MB2   &mkp MB3     &mkp MB5    &mkp MB4
-                                                                    &shift_middle &kp LALT    &kp LSHIFT
+&none   &none               &none                &none                  &none                  &none      &none           &none     &none     &none     &none        &none
+&none   &none               &none                &pmw PMW_SNIPE_CPI_DEC &pmw PMW_SNIPE_CPI_INC &none      &none           &kp KP_N7 &kp KP_N8 &kp KP_N9 &none        &none
+&trans  &pmw PMW_SNIPE_HOLD &pmw PMW_DRAG_SCROLL &pmw PMW_CPI_DEC       &pmw PMW_CPI_INC       &none      &kp KP_DIVIDE   &kp KP_N4 &kp KP_N5 &kp KP_N6 &kp KP_MINUS &kp KP_PLUS
+&trans  &mkp MB4            &mkp MB5             &mkp MB1               &mkp MB2               &mkp MB3   &kp KP_MULTIPLY &kp KP_N1 &kp KP_N2 &kp KP_N3 &kp KP_DOT   &trans
+                                                 &trans                 &none                  &none      &kp KP_ENTER    &kp KP_N0
+                                                                        &trans                 &trans     &trans
             >;
         };
 
         danger_layer {
             display-name = "Danger";
             bindings = <
-&none  &none  &none  &none  &bt BT_CLR_ALL  &bootloader    &bootloader  &bt BT_CLR_ALL  &none  &none  &none  &none
-&none  &none  &none  &none  &none           &none          &none        &none           &none  &none  &none  &none
-&none  &none  &none  &none  &none           &none          &none        &none           &none  &none  &none  &none
-&none  &none  &none  &none  &none           &none          &none        &none           &none  &none  &none  &none
-                                  &none  &none   &none      &none  &none
-                                         &none   &trans     &none
+&none           &bt BT_SEL 0  &bt BT_SEL 1  &bt BT_SEL 2  &bt BT_SEL 3  &bt BT_SEL 4    &none        &none        &none  &none  &none  &none
+&bt BT_CLR_ALL  &none         &none         &none         &none         &bootloader     &bootloader  &none        &none  &none  &none  &none
+&none           &none         &none         &none         &none         &none           &none        &none        &none  &none  &none  &none
+&to BASE        &none         &none         &none         &none         &none           &none        &none        &none  &none  &none  &none
+                                           &none         &none         &none           &none        &none
+                                                         &none         &none           &none
             >;
         };
+
     };
 };
