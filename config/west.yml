@@ -11,7 +11,7 @@ manifest:
       import: app/west.yml
     - name: zmk-pmw3610-driver
       remote: HyeongGeunPark
-      revision: 339eb89a1b5f8a284e9a43b4aefbcabb95cbf4dd
+      revision: ad7dcb4218d7a9bbbc62e13ea051eeec3a7c3cd5
 
   self:
     path: config
