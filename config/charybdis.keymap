@@ -58,7 +58,7 @@
             #binding-cells = <0>;
             flavor = "tap-preferred";
             tapping-term-ms = <225>;
-            bindings = <&amethyst_mods>, <&kp ESC>;
+            bindings = <&amethyst_mods &amethyst_escape>;
             display-name = "Amethyst";
         };
     };
@@ -77,6 +77,13 @@
                 &kp LSHIFT
             >;
             display-name = "Shift Alt";
+        };
+
+        amethyst_escape: amethyst_escape {
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            bindings = <&kp ESC>;
+            display-name = "Escape";
         };
 
         vi_select_block: vi_select_block {
