@@ -47,7 +47,6 @@ jobs:
             -b nice_nano_v2 -S zmk-usb-logging -- \
             -DZMK_CONFIG="${GITHUB_WORKSPACE}/config" \
             -DSHIELD=charybdis_right \
-            -DCONFIG_ZMK_LOG_LEVEL=4 \
             2>&1 | tee "${RUNNER_TEMP}/bluetooth-debug-build.log"
           build_status=${PIPESTATUS[0]}
           echo "status=${build_status}" >> "${GITHUB_OUTPUT}"
