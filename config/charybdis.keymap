@@ -68,7 +68,7 @@
         symbols_layer {
             display-name = "Symbols";
             bindings = <
-&trans     &kp F1          &kp F2     &kp F3                &kp F4                  &kp F5          &kp F6       &kp F7       &kp F8        &kp F9           &kp F10   &to DANGER
+&trans     &kp F1          &kp F2     &kp F3                &kp F4                  &kp F5          &kp F6       &kp F7       &kp F8        &kp F9           &kp F10   &mo DANGER
 &trans     &kp TILDE       &kp GRAVE  &kp LEFT_BRACE        &kp RIGHT_BRACE         &kp F11         &kp F12      &none        &kp UP        &none            &none     &none
 &trans     &kp MINUS       &kp EQUAL  &kp LEFT_PARENTHESIS  &kp RIGHT_PARENTHESIS   &kp PAGE_UP     &kp C_VOL_UP &kp LEFT     &kp DOWN      &kp RIGHT        &none     &none
 &trans     &kp UNDERSCORE  &kp PLUS   &kp LEFT_BRACKET      &kp RIGHT_BRACKET       &kp PAGE_DOWN   &kp C_VOL_DN &none        &kp LESS_THAN &kp GREATER_THAN &none     &trans
@@ -106,7 +106,7 @@
         danger_layer {
             display-name = "Danger";
             bindings = <
-&none           &bt BT_SEL 0  &bt BT_SEL 1  &bt BT_SEL 2  &bt BT_SEL 3  &bt BT_SEL 4    &out OUT_BLE &out OUT_USB &none  &none  &none  &to BASE
+&none           &bt BT_SEL 0  &bt BT_SEL 1  &bt BT_SEL 2  &bt BT_SEL 3  &bt BT_SEL 4    &out OUT_BLE &out OUT_USB &none  &none  &none  &none
 &bt BT_CLR_ALL  &bt BT_CLR    &none         &none         &none         &bootloader     &bootloader  &none         &none  &none  &none  &none
 &none           &none         &none         &none         &none         &none           &none        &none        &none  &none  &none  &none
 &none           &none         &none         &none         &none         &none           &none        &none        &none  &none  &none  &none
