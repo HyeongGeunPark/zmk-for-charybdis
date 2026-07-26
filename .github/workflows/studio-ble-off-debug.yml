@@ -1,0 +1,86 @@
+name: Studio BLE-off HID debug firmware
+
+on:
+  push:
+    branches:
+      - debug/studio-ble-off-logging
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build right-side USB logging firmware
+    runs-on: ubuntu-latest
+    container:
+      image: zmkfirmware/zmk-build-arm:stable
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache west modules
+        uses: actions/cache@v4
+        continue-on-error: true
+        with:
+          path: |
+            modules
+            tools
+            zephyr
+            bootloader
+            zmk
+            zmk-pmw3610-driver
+          key: ${{ runner.os }}-studio-ble-off-debug-${{ hashFiles('config/west.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-studio-ble-off-debug-
+
+      - name: Initialize west workspace
+        run: |
+          west init -l config
+          west update --fetch-opt=--filter=tree:0
+          west zephyr-export
+
+      - name: Build debug firmware
+        id: compile
+        shell: bash
+        run: |
+          set +e
+          west build -s zmk/app -d "${RUNNER_TEMP}/zmk-studio-ble-off-debug" \
+            -b nice_nano_v2 -S zmk-usb-logging -- \
+            -DZMK_CONFIG="${GITHUB_WORKSPACE}/config" \
+            -DSHIELD=charybdis_right \
+            -DCONFIG_ZMK_STUDIO=y \
+            -DCONFIG_ZMK_STUDIO_TRANSPORT_BLE=n \
+            -DCONFIG_ZMK_STUDIO_TRANSPORT_UART=n \
+            2>&1 | tee "${RUNNER_TEMP}/studio-ble-off-debug-build.log"
+          build_status=${PIPESTATUS[0]}
+          echo "status=${build_status}" >> "${GITHUB_OUTPUT}"
+          exit 0
+
+      - name: Report build failure
+        if: steps.compile.outputs.status != '0'
+        shell: bash
+        run: |
+          {
+            echo "### Studio BLE-off debug build failure"
+            echo '```text'
+            tail -n 100 "${RUNNER_TEMP}/studio-ble-off-debug-build.log"
+            echo '```'
+          } >> "${GITHUB_STEP_SUMMARY}"
+          exit 1
+
+      - name: Prepare diagnostic artifact
+        if: steps.compile.outputs.status == '0'
+        run: |
+          mkdir -p "${RUNNER_TEMP}/studio-ble-off-debug-artifact"
+          cp "${RUNNER_TEMP}/zmk-studio-ble-off-debug/zephyr/zmk.uf2" \
+            "${RUNNER_TEMP}/studio-ble-off-debug-artifact/charybdis_right-studio-ble-off-debug.uf2"
+          cp "${RUNNER_TEMP}/zmk-studio-ble-off-debug/zephyr/.config" \
+            "${RUNNER_TEMP}/studio-ble-off-debug-artifact/resolved-kconfig.txt"
+          cp "${RUNNER_TEMP}/studio-ble-off-debug-build.log" \
+            "${RUNNER_TEMP}/studio-ble-off-debug-artifact/build.log"
+
+      - name: Upload diagnostic artifact
+        if: steps.compile.outputs.status == '0'
+        uses: actions/upload-artifact@v4
+        with:
+          name: charybdis-right-studio-ble-off-debug
+          path: ${{ runner.temp }}/studio-ble-off-debug-artifact
