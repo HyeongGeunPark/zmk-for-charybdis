@@ -2,6 +2,7 @@
 #include <dt-bindings/zmk/bt.h>
 #include <dt-bindings/zmk/keys.h>
 #include <dt-bindings/zmk/mouse.h>
+#include <dt-bindings/zmk/outputs.h>
 #include <dt-bindings/zmk/pmw3610.h>
 
 #define BASE 0
@@ -105,8 +106,8 @@
         danger_layer {
             display-name = "Danger";
             bindings = <
-&none           &bt BT_SEL 0  &bt BT_SEL 1  &bt BT_SEL 2  &bt BT_SEL 3  &bt BT_SEL 4    &none        &none        &none  &none  &none  &to BASE
-&bt BT_CLR_ALL  &none         &none         &none         &none         &bootloader     &bootloader  &none        &none  &none  &none  &none
+&none           &bt BT_SEL 0  &bt BT_SEL 1  &bt BT_SEL 2  &bt BT_SEL 3  &bt BT_SEL 4    &out OUT_BLE &out OUT_USB &none  &none  &none  &to BASE
+&bt BT_CLR_ALL  &bt BT_CLR    &none         &none         &none         &bootloader     &bootloader  &none         &none  &none  &none  &none
 &none           &none         &none         &none         &none         &none           &none        &none        &none  &none  &none  &none
 &none           &none         &none         &none         &none         &none           &none        &none        &none  &none  &none  &none
                                            &none         &none         &none           &none        &none
