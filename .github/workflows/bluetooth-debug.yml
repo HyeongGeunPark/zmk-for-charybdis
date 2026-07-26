@@ -1,0 +1,84 @@
+name: Bluetooth debug firmware
+
+on:
+  push:
+    branches:
+      - debug/bluetooth-logging
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build right-side USB logging firmware
+    runs-on: ubuntu-latest
+    container:
+      image: zmkfirmware/zmk-build-arm:stable
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache west modules
+        uses: actions/cache@v4
+        continue-on-error: true
+        with:
+          path: |
+            modules
+            tools
+            zephyr
+            bootloader
+            zmk
+            zmk-pmw3610-driver
+          key: ${{ runner.os }}-bluetooth-debug-${{ hashFiles('config/west.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-bluetooth-debug-
+
+      - name: Initialize west workspace
+        run: |
+          west init -l config
+          west update --fetch-opt=--filter=tree:0
+          west zephyr-export
+
+      - name: Build debug firmware
+        id: compile
+        shell: bash
+        run: |
+          set +e
+          west build -s zmk/app -d "${RUNNER_TEMP}/zmk-bluetooth-debug" \
+            -b nice_nano_v2 -S zmk-usb-logging -- \
+            -DZMK_CONFIG="${GITHUB_WORKSPACE}/config" \
+            -DSHIELD=charybdis_right \
+            -DCONFIG_ZMK_LOG_LEVEL=4 \
+            2>&1 | tee "${RUNNER_TEMP}/bluetooth-debug-build.log"
+          build_status=${PIPESTATUS[0]}
+          echo "status=${build_status}" >> "${GITHUB_OUTPUT}"
+          exit 0
+
+      - name: Report build failure
+        if: steps.compile.outputs.status != '0'
+        shell: bash
+        run: |
+          {
+            echo "### Bluetooth debug build failure"
+            echo '```text'
+            tail -n 80 "${RUNNER_TEMP}/bluetooth-debug-build.log"
+            echo '```'
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+          escaped_log=$(tail -n 80 "${RUNNER_TEMP}/bluetooth-debug-build.log" \
+            | sed ':a;N;$!ba;s/%/%25/g;s/\r/%0D/g;s/\n/%0A/g')
+          echo "::error title=Bluetooth debug build failed::${escaped_log}"
+          exit 1
+
+      - name: Prepare firmware artifact
+        if: steps.compile.outputs.status == '0'
+        run: |
+          mkdir -p "${RUNNER_TEMP}/bluetooth-debug-artifact"
+          cp "${RUNNER_TEMP}/zmk-bluetooth-debug/zephyr/zmk.uf2" \
+            "${RUNNER_TEMP}/bluetooth-debug-artifact/charybdis_right-bluetooth-debug.uf2"
+
+      - name: Upload firmware artifact
+        if: steps.compile.outputs.status == '0'
+        uses: actions/upload-artifact@v4
+        with:
+          name: charybdis-right-bluetooth-debug
+          path: ${{ runner.temp }}/bluetooth-debug-artifact
