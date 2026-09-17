@@ -34,7 +34,7 @@ PMW3610 fresh sample은 약 250 Hz이며, 별도 synthetic event로 ESB/USB path
 
 ## 2. 목표 interface와 build contract
 
-### 2.1 Shield와 artifact
+### 2.1 Shield, build target, UF2 image
 
 새 public build target:
 
@@ -43,7 +43,9 @@ PMW3610 fresh sample은 약 250 Hz이며, 별도 synthetic event로 ESB/USB path
 - `charybdis_right`
 - `settings_reset`
 
-Artifact에도 위 이름을 명시하여 잘못된 board에 flash하는 위험을 줄인다.
+각 build entry의 `artifact-name`에도 위 role을 명시한다. ZMK reusable workflow가
+생성물을 하나의 `firmware` artifact로 병합하더라도 그 안의 UF2 filename으로
+target을 구분하여 잘못된 board에 flash하는 위험을 줄인다.
 
 ### 2.2 역할
 
@@ -133,7 +135,8 @@ Zephyr 4.1 port에서는 native driver와 충돌하지 않도록 다음 namespac
 
 ### Phase 0: baseline 보존
 
-1. 현재 successful Actions artifact의 left/right/settings-reset UF2를 저장한다.
+1. 현재 successful Actions `firmware` artifact의 left/right/settings-reset UF2를
+   저장한다.
 2. 각 file의 SHA-256과 다음 source revision을 기록한다.
    - config repository commit
    - ZMK revision
@@ -145,7 +148,7 @@ Zephyr 4.1 port에서는 native driver와 충돌하지 않도록 다음 namespac
 Gate:
 
 - Baseline 두 half가 현재와 동일하게 정상 동작한다.
-- Rollback artifact와 checksum이 로컬에 존재한다.
+- Rollback UF2 image와 각 checksum이 로컬에 존재한다.
 
 ### Phase 1: PMW driver를 split-command-safe하게 변경
 
@@ -175,7 +178,7 @@ Gate:
 4. Left/right를 explicit peripheral로 바꾼다.
 5. Shared `trackball_split@0`과 dongle listener를 구성한다.
 6. Right direct trackball listener를 제거한다.
-7. `build.yaml`에 네 artifact와 명시적 artifact name을 설정한다.
+7. `build.yaml`에 네 build target과 role이 명확한 UF2 `artifact-name`을 설정한다.
 8. `settings_reset`을 세 board에 적용하고 BLE dongle firmware를 flash한다.
 
 BLE dongle config에서는 두 peripheral을 위한 connection/bond count를 확보한다.
@@ -245,6 +248,10 @@ CONFIG_ZMK_SPLIT_ESB_PERIPHERAL_ID=2
 CONFIG_ZMK_SPLIT_ROLE_CENTRAL=y
 CONFIG_ZMK_SPLIT_ESB_PERIPHERAL_COUNT=3
 CONFIG_ZMK_SPLIT_ESB_AUTO_HEAL_KEY_POS_MAX=56
+CONFIG_ZMK_BATTERY_REPORTING=y
+CONFIG_ZMK_SPLIT_BLE_CENTRAL_BATTERY_LEVEL_FETCHING=y
+CONFIG_ZMK_SPLIT_BLE_CENTRAL_PERIPHERALS=2
+CONFIG_BT_MAX_PAIRED=2
 ```
 
 Initial transport/resource values:
@@ -273,7 +280,11 @@ Steps:
 
 1. Cryptographic RNG로 한 keyboard set 전용 ESB base/prefix address를 생성한다.
    같은 address를 세 image에 넣되 이를 secret으로 취급하지 않는다.
-2. IDs 1/2, array capacity 3, physical peripheral/battery count 2를 적용한다.
+2. IDs 1/2와 array capacity 3을 적용한다. BLE가 꺼져 있어도 ESB battery proxy가
+   사용하는 `CONFIG_ZMK_BATTERY_REPORTING=y`,
+   `CONFIG_ZMK_SPLIT_BLE_CENTRAL_BATTERY_LEVEL_FETCHING=y`,
+   `CONFIG_ZMK_SPLIT_BLE_CENTRAL_PERIPHERALS=2`, `CONFIG_BT_MAX_PAIRED=2`를
+   dongle config에 명시한다.
 3. ACK, CRC, RF hopping 및 module loss-sensitive retry default를 유지한다.
 4. Pointer input application retry는 우선 0으로 둔다.
 5. BLE config와 dead keymap binding을 제거한다.
@@ -296,7 +307,7 @@ reproducible primary builder로 사용한다.
 Requirements:
 
 - Workflow와 manifest를 같은 ZMK exact SHA에 맞춘다.
-- Artifact name에 target role을 명시한다.
+- 병합된 `firmware` artifact 안의 각 UF2 filename에 target role을 명시한다.
 - Dongle/left/right는 각각 clean checkout/pristine workspace에서 build한다.
 - Generated `.config`와 merged DTS를 diagnostic artifact로 보존한다.
 - Release build는 verbose ESB logging을 끈다.
@@ -312,7 +323,8 @@ checkout을 공유하지 않는다.
 
 ### 5.1 Static config/DTS
 
-네 artifact가 clean build되어야 한다. 각 generated output에서 다음을 확인한다.
+네 firmware build target이 clean build되어야 한다. 각 generated output에서
+다음을 확인한다.
 
 - Central role은 dongle 하나뿐이다.
 - Left/right는 peripheral이며 host USB가 disabled다.
@@ -419,7 +431,8 @@ BLE dongle 전환과 final ESB 전환 때 각각 수행한다.
 4. Right peripheral production image를 flash한다.
 5. Dongle central production image를 flash하고 USB에 연결한다.
 6. Enclosure를 닫기 전에 key/trackball/Studio smoke test를 수행한다.
-7. Firmware SHA와 세 artifact checksum을 기록한다.
+7. Firmware SHA, 동글·좌·우 production UF2와 settings-reset UF2의 checksum을
+   기록한다.
 
 ESB에는 OTA provisioning/update가 없으므로 physical reset 접근성을 제거하지
 않는다.
@@ -442,7 +455,7 @@ SHA로 되돌려야 한다. 한 repository만 rollback하여 manifest와 source�
 작업은 다음이 모두 충족될 때 완료다.
 
 - Reproducible exact-SHA manifest와 workflow가 존재한다.
-- 네 artifact가 isolated clean CI에서 성공한다.
+- 네 firmware image가 isolated clean CI에서 성공하고 병합 artifact에 포함된다.
 - Dongle만 central이고 좌·우가 ESB peripheral로 동작한다.
 - 56 keys와 모든 현재 사용 중인 pointing/runtime 기능이 보존된다.
 - Studio가 dongle USB에서 동작한다.

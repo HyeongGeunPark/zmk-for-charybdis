@@ -39,11 +39,13 @@
 - workflow: ZMK reusable workflow `@v0.3`
 - build matrix: left, right, `settings_reset`
 
-마지막으로 확인한 정상 기준 빌드는 세 artifact가 모두 성공했다.
+마지막으로 확인한 정상 기준 빌드는 세 matrix firmware build가 모두 성공했고,
+생성된 UF2 세 개가 하나의 `firmware` artifact에 포함되었다.
 
 - [GitHub Actions run 30211214147](https://github.com/HyeongGeunPark/zmk-for-charybdis/actions/runs/30211214147)
 
-이 artifact와 SHA는 실제 전환 전에 내려받아 checksum과 함께 보관해야 한다.
+이 `firmware` artifact와 SHA는 실제 전환 전에 내려받아 각 UF2 checksum과 함께
+보관해야 한다.
 원래의 두 보드/right-central 구성으로 돌아갈 때 사용할 rollback 기준이다.
 
 ### 2.2 현재 split 역할
@@ -315,6 +317,12 @@ README의 sample address를 복사하지 말고 keyboard 세트마다 random add
 마지막 값이 3인 이유는 source ID를 array index로 사용하는 코드가 있어 ID
 1과 2에 slot 0..2가 필요하기 때문이다. README의 "max ID 이상"이라는 표현만
 따라 2로 두는 것보다 안전하다.
+
+ESB-only battery proxy는 이름에 BLE가 남아 있는 기존 central 설정을 재사용한다.
+Dongle에는 `CONFIG_ZMK_BATTERY_REPORTING=y`,
+`CONFIG_ZMK_SPLIT_BLE_CENTRAL_BATTERY_LEVEL_FETCHING=y`,
+`CONFIG_ZMK_SPLIT_BLE_CENTRAL_PERIPHERALS=2`, `CONFIG_BT_MAX_PAIRED=2`를
+명시해야 한다. 실제 split transport는 이 경우에도 ESB이며 BLE는 disabled다.
 
 ESB address는 인증 key가 아니다. 조사한 구현에는 BLE bonding에 해당하는
 authentication/encryption이 없다. 주소는 인접 ESB set과의 충돌 방지용이다.
