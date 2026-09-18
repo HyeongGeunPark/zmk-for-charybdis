@@ -9,7 +9,7 @@
         display-name = "default_transform";
 
         kscan = <&kscan0>;
-        transform = <&matrix_transform0>;
+        transform = <&default_transform>;
 
         keys  //                     w   h    x    y     rot    rx    ry
             = <&key_physical_attrs 100 100    0    0       0     0     0>
@@ -76,7 +76,7 @@
 / {
     chosen {
         zmk,kscan = &kscan0;
-        zmk,physical-layouts = &physical_layout_0;
+        zmk,physical-layout = &physical_layout_0;
 	zmk,underglow = &led_strip;
     };
 
@@ -131,17 +131,3 @@
 		triggers-per-rotation = <6>;
     };
 };
-&physical_layout_0{
-
-	transform = <&default_transform>;
-	kscan = <&kscan0>;
-
-};
-
-zephyr_udc0: &usbd { 
-    compatible = "nordic,nrf-usbd"; 
-    status = "okay"; 
-
-};
-
-//

@@ -203,7 +203,7 @@ Manifest pins:
 
 | Dependency | Exact revision |
 | --- | --- |
-| `zmkfirmware/zmk` | `641514a97db345f499dd50b0360e594270f008fe` |
+| `zmkfirmware/zmk` | `6e2ef41e022d555b10f116e395832913f71717b3` |
 | `badjeff/zmk-feature-split-esb` | `314c7cbaf4a74e1add1d6ffc8249de3e29965b8c` |
 | `badjeff/sdk-nrf` | `9b3d2623fdcd9c0fd0284f860beea924568c9826` |
 | `nrfconnect/sdk-nrfxlib` | `dfadf17305d8f000eda9aa74a5b9ff1c5647a23e` |
@@ -212,8 +212,10 @@ Implementation:
 
 1. GitHub reusable workflow ref도 ZMK exact SHA로 바꾼다.
 2. Board ID를 `nice_nano@2.0.0//zmk`로 바꾼다.
-3. Custom PMW driver를 Zephyr 4.1 API와 alternate namespace로 port한다.
-4. Driver의 resulting tested commit을 exact SHA로 pin한다.
+3. 기존 PMW driver와 runtime binding을 제거한 keyboard-only baseline을 먼저
+   build하고 실제 하드웨어에서 검증한다.
+4. 새 PMW driver는 native `pixart,pmw3610`과 충돌하지 않는 namespace로 별도
+   구현하고, resulting tested commit을 exact SHA로 pin한다.
 5. ESB module은 manifest에 있어도 transport는 disabled 상태로 둔다.
 6. Phase 2의 전체 BLE-dongle regression을 반복한다.
 

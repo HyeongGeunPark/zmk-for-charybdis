@@ -2,16 +2,11 @@ manifest:
   remotes:
     - name: zmkfirmware
       url-base: https://github.com/zmkfirmware
-    - name: HyeongGeunPark
-      url-base: https://github.com/HyeongGeunPark
   projects:
     - name: zmk
       remote: zmkfirmware
-      revision: v0.3
+      revision: 6e2ef41e022d555b10f116e395832913f71717b3
       import: app/west.yml
-    - name: zmk-pmw3610-driver
-      remote: HyeongGeunPark
-      revision: 75631d0abb94a47139afac0d4bb13bade3e3f13f
 
   self:
     path: config

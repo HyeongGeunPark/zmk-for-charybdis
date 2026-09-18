@@ -278,7 +278,7 @@ NCS 3.1/Zephyr 4.1 security library와 radio resource 문제로 지원 경로가
 
 | Project | Revision |
 | --- | --- |
-| `zmkfirmware/zmk` | [`641514a97db345f499dd50b0360e594270f008fe`](https://github.com/zmkfirmware/zmk/commit/641514a97db345f499dd50b0360e594270f008fe) |
+| `zmkfirmware/zmk` | [`6e2ef41e022d555b10f116e395832913f71717b3`](https://github.com/zmkfirmware/zmk/commit/6e2ef41e022d555b10f116e395832913f71717b3) |
 | `badjeff/zmk-feature-split-esb` | [`314c7cbaf4a74e1add1d6ffc8249de3e29965b8c`](https://github.com/badjeff/zmk-feature-split-esb/commit/314c7cbaf4a74e1add1d6ffc8249de3e29965b8c) |
 | `badjeff/sdk-nrf` | [`9b3d2623fdcd9c0fd0284f860beea924568c9826`](https://github.com/badjeff/sdk-nrf/commit/9b3d2623fdcd9c0fd0284f860beea924568c9826) |
 | `nrfconnect/sdk-nrfxlib` | [`dfadf17305d8f000eda9aa74a5b9ff1c5647a23e`](https://github.com/nrfconnect/sdk-nrfxlib/commit/dfadf17305d8f000eda9aa74a5b9ff1c5647a23e) |
