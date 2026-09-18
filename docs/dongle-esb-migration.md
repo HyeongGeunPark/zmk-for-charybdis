@@ -5,6 +5,32 @@
 > 목표: nice!nano v2 동글을 유일한 central로 사용하고, 좌·우 하프를
 > ESB peripheral로 구성하여 1 ms급 split/USB transport를 구현·실측한다.
 
+## 현재 적용 상태 (2026-09-18)
+
+사용자 결정에 따라 원래 순서보다 Zephyr 4.1 기준선 이관을 먼저 수행했다.
+
+- Config branch: `codex/zmk-v04-migration`
+- Migration code commit: `c69f9c8e218b464d50ed8fa800dc533b911db2bb`
+- ZMK pin: `6e2ef41e022d555b10f116e395832913f71717b3`
+- Board target: `nice_nano@2.0.0//zmk`
+- Topology: 기존 right-central BLE 유지
+- Legacy PMW3610 module: 제거됨
+- PMW3610 이동 및 runtime control: 새 드라이버가 들어올 때까지 비활성
+- Build verification: left, right + USB Studio, settings-reset 모두 성공
+- [GitHub Actions run 35297671581](https://github.com/HyeongGeunPark/zmk-for-charybdis/actions/runs/35297671581)
+
+검증 artifact:
+
+| UF2 | SHA-256 |
+| --- | --- |
+| `charybdis_left-nice_nano@2.0.0__zmk-zmk.uf2` | `630699A04E9EE9B031D30B3C14F0D0CAE035CFF5F7DE353197F5184803794F35` |
+| `charybdis_right-nice_nano@2.0.0__zmk-zmk.uf2` | `5E815517FD62397A882EB0EF5CA325A5E0DB20ACCCF44980BA15B570C93A3ED6` |
+| `settings_reset-nice_nano@2.0.0__zmk-zmk.uf2` | `0DD6BE82134D011C8EE58794940F87E03B4EAF8E859AB336EF123BCA190EEF3A` |
+
+여기까지는 compile 및 artifact 검증이다. 실제 키 매트릭스, BLE split, USB
+Studio와 재페어링은 하드웨어 smoke test가 남아 있다. 다음 구현 순서는 새
+PMW3610 driver, BLE dongle/input-split, ESB 순이다.
+
 ## 1. 확정한 목표와 범위
 
 최종 데이터 경로는 다음과 같다.

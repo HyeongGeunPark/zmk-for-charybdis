@@ -21,8 +21,9 @@
 - `zmk-feature-split-esb` 최신 계열은 USB-only 동글 구성을 지원하지만
   릴리스 태그가 없는 실험적 모듈이다. ZMK, ESB, NCS, nrfxlib을 exact SHA로
   고정해야 한다.
-- 가장 안전한 진행 순서는 드라이버 보완, ZMK v0.3 BLE 동글 검증, Zephyr
-  4.1 포팅 검증, 마지막 ESB-only 전환이다.
+- 사용자가 기존 드라이버를 재작성하기로 했으므로 실제 진행 순서는 Zephyr
+  4.1 keyboard-only 기준선, 새 PMW3610 driver, BLE 동글/input-split 검증,
+  마지막 ESB-only 전환으로 조정했다.
 
 ## 2. 현재 저장소 조사
 
