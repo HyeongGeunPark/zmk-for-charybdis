@@ -51,13 +51,13 @@
         scroller {
             /* SYMBOLS and SCROLL */
             layers = <1 4>;
-            /* 8 counts per wheel step rather than 24, so a small roll of the
-               ball already scrolls. Paired with smooth scrolling in
-               charybdis_dongle.conf, which shrinks what each step is worth;
-               raise this again if scrolling overshoots. */
+            /* Counts per wheel step. Smooth scrolling makes each step worth
+               much less than a full tick, so this has to be far lower than
+               the 24 that suited plain ticks: 8 still scrolled too slowly,
+               hence 2. Raise it if scrolling now overshoots. */
             input-processors = <&zip_xy_to_scroll_mapper>,
                 <&zip_scroll_transform INPUT_TRANSFORM_X_INVERT>,
-                <&zip_scroll_scaler 1 8>;
+                <&zip_scroll_scaler 1 2>;
         };
 
         sniper {
