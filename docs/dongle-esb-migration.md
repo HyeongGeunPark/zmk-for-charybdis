@@ -256,9 +256,11 @@ layer의 기존 키 위치에 `&mo SNIPE` / `&mo SCROLL`로 두고, 두 layer는
 
 Phase 1은 이로써 종료한다.
 
-### Phase 2: ZMK v0.3 BLE dongle
+### Phase 2: BLE dongle
 
-이 단계는 ZMK `v0.3`과 BLE split을 유지한다.
+> 2026-09-19 개정. Zephyr 4.1 이관을 먼저 했으므로 이 phase는 v0.3이 아니라
+> 현재 pin된 v0.4 baseline 위에서 수행한다. 그 결과 Phase 3의 1~4번은 이미
+> 충족되며, 남는 것은 ESB module을 manifest에 두되 transport는 끄는 작업뿐이다.
 
 1. `charybdis_dongle` shield metadata, Kconfig, overlay/conf를 추가한다.
 2. Shared logical layout DTS와 half hardware DTS를 분리한다.
@@ -281,6 +283,33 @@ Gate:
 - CPI/snipe/drag command가 왼쪽과 오른쪽 source key 모두에서 동작한다.
 - Studio가 dongle USB에서 연결된다.
 - Dongle/half power-cycle 및 한 half 분리·복귀 후 복구한다.
+
+구현 상태 (2026-09-19): 위 1~8 중 flash를 제외한 전부를 `my-keymap`에
+적용했다.
+
+- Shared layout을 `charybdis_layout.dtsi`로 분리했다. physical layout node의
+  `kscan` property는 제거하여 각 target의 `chosen zmk,kscan`이 결정하게 했다.
+  Dongle은 이 파일만 include하고 `zmk,kscan-mock`을 쓴다.
+- `charybdis.dtsi`에는 두 half의 hardware(kscan row, encoder, LED)만 남겼다.
+- Central role을 right에서 dongle로 옮겼다. `Kconfig.defconfig`에서 right의
+  `ZMK_SPLIT_ROLE_CENTRAL` default를 제거하고 dongle에 peripheral 2,
+  `BT_MAX_CONN`/`BT_MAX_PAIRED` 7을 설정했다.
+- Trackball은 right에서 `zmk,input-split`(reg 0)로 raw motion만 보내고,
+  listener와 processor chain 전체는 dongle로 옮겼다. ZMK는 input listener를
+  central에만 build하며 layer state도 central의 것이므로 이 배치가 강제된다.
+- Studio와 `studio-rpc-usb-uart` snippet을 right에서 dongle로 옮겼다.
+- Keymap에서 half 전용 node 참조(`&spi3`, encoder, `&sensors`, underglow
+  chosen 삭제)를 모두 걷어냈다. Dongle에는 그 node들이 없어 build가 깨진다.
+  Underglow와 encoder는 이제 shield 파일에서 끈다.
+- `build.yaml`은 dongle/left/right/settings_reset 네 target이며 각각
+  `artifact-name`으로 role을 명시한다.
+
+Flash 전 필요한 것:
+
+- Dongle용 nice!nano v2 보드 한 장이 추가로 필요하다.
+- 세 board 모두에 `settings_reset`을 먼저 flash해야 한다. 기존 bond가 남아
+  있으면 dongle이 두 half를 잡지 못한다. 이 과정에서 host 재페어링도 한 번
+  발생한다.
 
 ### Phase 3: Pinned Zephyr 4.1 stack, BLE 유지
 

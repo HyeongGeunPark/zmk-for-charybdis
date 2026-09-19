@@ -1,0 +1,65 @@
+/*
+ * Dongle: the only central. It has no matrix of its own, so it takes the
+ * shared layout and a mock kscan, and receives key positions and trackball
+ * motion from the two halves over BLE.
+ */
+
+#include "charybdis_layout.dtsi"
+
+#include <zephyr/dt-bindings/input/input-event-codes.h>
+#include <input/processors.dtsi>
+#include <dt-bindings/zmk/input_transform.h>
+
+/ {
+    chosen {
+        zmk,kscan = &mock_kscan;
+    };
+
+    mock_kscan: mock_kscan_0 {
+        compatible = "zmk,kscan-mock";
+        columns = <0>;
+        rows = <0>;
+        events = <0>;
+    };
+
+    /*
+     * Proxy for the trackball on the right half. The reg address has to match
+     * the zmk,input-split node in charybdis_right.overlay.
+     */
+    split_inputs {
+        #address-cells = <1>;
+        #size-cells = <0>;
+
+        trackball_split: trackball_split@0 {
+            compatible = "zmk,input-split";
+            reg = <0>;
+        };
+    };
+
+    /*
+     * Pointer processing lives here rather than on the half, because layer
+     * state is the central's and ZMK only builds the input listener for the
+     * central. The right half just forwards raw motion.
+     *
+     * These have to be the raw layer numbers: keep in sync with the SYMBOLS,
+     * SCROLL and SNIPE defines in charybdis.keymap.
+     */
+    trackball_listener {
+        compatible = "zmk,input-listener";
+        device = <&trackball_split>;
+
+        scroller {
+            /* SYMBOLS and SCROLL */
+            layers = <1 4>;
+            input-processors = <&zip_xy_to_scroll_mapper>,
+                <&zip_scroll_transform INPUT_TRANSFORM_X_INVERT>,
+                <&zip_scroll_scaler 1 24>;
+        };
+
+        sniper {
+            /* SNIPE */
+            layers = <5>;
+            input-processors = <&zip_xy_scaler 1 2>;
+        };
+    };
+};

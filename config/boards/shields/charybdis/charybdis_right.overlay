@@ -6,8 +6,6 @@
  
 #include "charybdis.dtsi"
 #include <zephyr/dt-bindings/input/input-event-codes.h>
-#include <input/processors.dtsi>
-#include <dt-bindings/zmk/input_transform.h>
 
 &default_transform {
     col-offset = <6>;
@@ -78,41 +76,21 @@
     };
 };
 
+/*
+ * The right half is a peripheral now, so it only forwards raw motion. The
+ * listener and the whole processor chain live on the dongle, which is where
+ * layer state is. The reg address has to match the proxy node in
+ * charybdis_dongle.overlay.
+ */
 / {
-    trackball_listener {
-        compatible = "zmk,input-listener";
-        device = <&trackball>;
+    split_inputs {
+        #address-cells = <1>;
+        #size-cells = <0>;
 
-        /*
-         * The base chain is plain pointer motion. Holding a mode key on the
-         * Pointer layer activates a layer whose only effect is to swap in a
-         * different chain here.
-         *
-         * These have to be the raw layer numbers. Devicetree is preprocessed
-         * before Kconfig, so this cannot live in charybdis.keymap behind a
-         * CONFIG_SHIELD_CHARYBDIS_RIGHT guard -- such a guard is always false
-         * and silently drops the whole block. Keep in sync with the SYMBOLS,
-         * SCROLL and SNIPE defines in charybdis.keymap.
-         */
-        scroller {
-            /* SYMBOLS and SCROLL. Holding the symbol layer has scrolled the
-               trackball since before the v0.4 move, so it stays a scroll
-               layer alongside the dedicated one. */
-            layers = <1 4>;
-            /* Map the two axes onto the wheels, flip horizontal scrolling
-               only, then require several counts per wheel tick. 24 is where
-               the old drag scroll ended up. */
-            input-processors = <&zip_xy_to_scroll_mapper>,
-                <&zip_scroll_transform INPUT_TRANSFORM_X_INVERT>,
-                <&zip_scroll_scaler 1 24>;
-        };
-
-        sniper {
-            /* SNIPE */
-            layers = <5>;
-            /* Half speed, matching the old driver's 200 CPI snipe mode
-               against its 400 CPI default. */
-            input-processors = <&zip_xy_scaler 1 2>;
+        trackball_split: trackball_split@0 {
+            compatible = "zmk,input-split";
+            reg = <0>;
+            device = <&trackball>;
         };
     };
 };
@@ -136,7 +114,9 @@
 
 &spi3 {
     compatible = "nordic,nrf-spim";
-    status = "okay";
+    /* Underglow is described but unused; the shared keymap used to turn this
+       off, which the dongle cannot do since it has no spi3 LED strip. */
+    status = "disabled";
 
     pinctrl-0 = <&spi3_default>;
     pinctrl-1 = <&spi3_sleep>;

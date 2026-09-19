@@ -16,12 +16,6 @@
 		, <&gpio1 4  (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
 		;
 };
-&left_encoder_1 {
-    status = "okay";
-};
-&left_encoder_2 {
-    status = "okay";
-};
 //RGB bus
 &pinctrl {
     spi3_default: spi3_default {
@@ -40,7 +34,8 @@
 
 &spi3 {
     compatible = "nordic,nrf-spim";
-    status = "okay";
+    /* Underglow is described but unused. */
+    status = "disabled";
 
     pinctrl-0 = <&spi3_default>;
     pinctrl-1 = <&spi3_sleep>;

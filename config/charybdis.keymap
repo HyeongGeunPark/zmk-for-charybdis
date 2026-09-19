@@ -5,7 +5,7 @@
 #include <dt-bindings/zmk/outputs.h>
 
 #define BASE 0
-/* Also a scroll layer: see the listener in charybdis_right.overlay. */
+/* Also a scroll layer: see the listener in charybdis_dongle.overlay. */
 #define SYMBOLS 1
 // #define UTILITY 2
 #define POINTER 2
@@ -15,34 +15,19 @@
  * trackball's input processor chain can be swapped while a key is held.
  *
  * The listener that reacts to them, and to SYMBOLS, lives in
- * charybdis_right.overlay and spells these numbers out, because devicetree
+ * charybdis_dongle.overlay and spells these numbers out, because devicetree
  * is preprocessed before Kconfig and so cannot be made conditional on the
  * shield. Keep the two in sync by hand.
  */
 #define SCROLL 4
 #define SNIPE 5
 
-&spi3 {
-    status = "disabled";
-};
-
-&left_encoder_1 {
-    status = "disabled";
-};
-
-&left_encoder_2 {
-    status = "disabled";
-};
-
-&sensors {
-    status = "disabled";
-};
-
+/*
+ * Shared by both halves and the dongle, so nothing here may touch nodes that
+ * only exist on one of them. Underglow, encoders and the unused SPI bus are
+ * disabled in the shield files instead.
+ */
 / {
-    chosen {
-        /delete-property/ zmk,underglow;
-    };
-
     keymap {
         compatible = "zmk,keymap";
 
