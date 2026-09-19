@@ -425,6 +425,16 @@ grep -nE '^#define CONFIG_[A-Za-z0-9_]+[[:space:]]*$'   build/zephyr/include/gen
   수단이 사라진다. `ZMK_BATTERY_REPORTING`은 peripheral이 central에 값을
   올리는 경로로 남겨 두었으나 현재 표시 수단이 없다.
 
+보류 중인 tuning (2026-09-19):
+
+- Sensor sampling은 아직 250 Hz가 아니라 driver 기본값인 8 ms(125 Hz)다.
+  Phase 1 원안 5번("250 Hz performance option")은 새 driver 기준으로 Phase 1을
+  다시 쓰면서 누락되었다. 올리려면 trackball node에 `force-awake`와
+  `force-awake-4ms-mode`를 함께 넣어야 한다.
+- 다만 right half는 배터리 구동이고, `force-awake`는 ZMK ACTIVE 동안 sensor의
+  downshift를 막는다. Module README가 4 ms mode를 권하는 맥락은 USB 직결이다.
+  현재 battery 잔량을 볼 수단이 없으므로, 먼저 며칠 소모를 관찰한 뒤 적용한다.
+
 되돌리려면 manifest에서 NCS를 빼고 `CONFIG_ZMK_BLE`를 되돌린 뒤 settings
 reset을 다시 해야 한다. Manifest만 남기고 BLE를 켜는 중간 상태는 build되지
 않는다(Phase 3 참고).
