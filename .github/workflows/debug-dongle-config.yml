@@ -1,0 +1,55 @@
+# One-off diagnostic for the dongle build failing in Zephyr's generated
+# configs.c with an assembler "missing expression". That file turns every
+# "#define CONFIG_" in autoconf.h into a .equ, so a single symbol reaching it
+# with an empty value breaks the build, and nothing in the normal build log
+# says which symbol it is.
+#
+# This builds the dongle the same way the release workflow does, ignores the
+# failure, and prints the empty defines. Delete this file once the symbol is
+# known.
+name: Debug dongle config
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/debug-dongle-config.yml"
+
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+    container:
+      image: zmkfirmware/zmk-build-arm:stable
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: config
+
+      - name: West init and update
+        run: |
+          west init -l config
+          west update --fetch-opt=--filter=blob:none
+          west zephyr-export
+
+      - name: Build dongle, keep going on failure
+        run: |
+          west build -s zmk/app -d build -b "nice_nano@2.0.0//zmk" \
+            -S studio-rpc-usb-uart -- \
+            -DZMK_CONFIG="${GITHUB_WORKSPACE}/config/config" \
+            -DSHIELD=charybdis_dongle || true
+
+      - name: Empty CONFIG defines in autoconf.h
+        run: |
+          AC=build/zephyr/include/generated/zephyr/autoconf.h
+          echo "=== defines with no value (the culprits) ==="
+          grep -nE '^#define CONFIG_[A-Za-z0-9_]+[[:space:]]*$' "$AC" || echo "(none)"
+
+      - name: Empty arguments in generated configs.c
+        run: |
+          CC=build/zephyr/misc/generated/configs.c
+          echo "=== GEN_ABSOLUTE_SYM_KCONFIG with an empty value ==="
+          grep -nE 'GEN_ABSOLUTE_SYM_KCONFIG\([^,]+,[[:space:]]*\)' "$CC" || echo "(none)"
+          echo
+          echo "=== lines 28-36, where the assembler points ==="
+          sed -n '28,36p' "$CC"
