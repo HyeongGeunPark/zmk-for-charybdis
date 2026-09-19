@@ -230,6 +230,16 @@ Gate:
 - left와 settings-reset build target이 깨지지 않는다.
 - flash 후 BLE 재페어링이 발생하지 않는다.
 
+구현 상태 (2026-09-19): 위 1~7을 `my-keymap`에 적용했다. driver pin은
+`44b4a76b74d293a93cec4ccb7e04cb8d29c10f93`이다. snipe와 drag-scroll은 POINTER
+layer의 기존 키 위치에 `&mo SNIPE` / `&mo SCROLL`로 두고, 두 layer는 binding이
+전부 `&trans`인 pointer mode layer다. CPI inc/dec는 대체 구현 없이 비워 두었다.
+하드웨어 확인 대상은 다음 세 가지다.
+
+- 축 방향: `swap-xy` + `invert-x` + `invert-y` 조합이 기존 체감과 같은지
+- drag-scroll 방향과 `zip_scroll_scaler` 분모 24
+- `CONFIG_PMW3610_ALT_INIT_POWER_UP_EXTRA_DELAY_MS=1000`을 줄일 수 있는지
+
 ### Phase 2: ZMK v0.3 BLE dongle
 
 이 단계는 ZMK `v0.3`과 BLE split을 유지한다.
