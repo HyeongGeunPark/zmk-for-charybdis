@@ -187,15 +187,22 @@ ZMK main/Zephyr 4.1에는 이미 `pixart,pmw3610` native driver가 있다. 현�
 external driver를 그대로 올리면 같은 compatible/binding/device instance를
 두 구현이 소유할 수 있다.
 
-이번 migration에서 기존 runtime feature를 보존하려면 custom fork를 다음과
-같이 port하는 것이 가장 좁은 변경이다.
+2026-09-19 결정: 기존 fork를 port하지 않고
+[badjeff/zmk-pmw3610-driver](https://github.com/badjeff/zmk-pmw3610-driver)를
+채택한다. 레거시 runtime ABI는 보존하지 않는다.
 
-- DTS compatible: `pixart,pmw3610-alt`
-- Kconfig namespace: `PMW3610_ALT_*`
-- 기존 keymap의 PMW dt-binding 상수와 `zmk,behavior-pmw3610` ABI 유지
+- 이미 `pixart,pmw3610-alt` compatible과 `CONFIG_PMW3610_ALT_*` namespace를
+  써서 native driver와 충돌하지 않는다.
+- `zmk-feature-split-esb`와 같은 저자이므로 ESB 단계까지 toolchain 정합성이
+  유지된다.
+- split peripheral shield를 전제로 설계되어 `zmk,input-split`과 맞는다.
+- scroll/snipe/auto-layer를 driver에서 제거하고 keymap의 input-processor
+  chain으로 옮긴 구조라서, native driver 정리를 후속 과제로 미룰 필요가 없다.
+- sampling rate와 reporting rate가 분리되어 RF 혼잡 환경에서 report 수를
+  줄이면서 cursor traction을 유지한다.
 
-ESB가 안정된 뒤 native driver와 central input processor로 정리하는 작업은
-별도 후속 과제로 분리한다.
+자세한 적용 계획은 [migration plan](dongle-esb-migration.md) §2.5와 Phase 1에
+정리한다.
 
 ## 4. ZMK 동글 및 pointing 조사
 
@@ -479,6 +486,7 @@ mutable source tree를 build variant 간 공유하지 않는 것이 안전하다
 - [Pin your ZMK version](https://zmk.dev/blog/2025/06/20/pinned-zmk)
 - [ZMK Zephyr 4.1 Update](https://zmk.dev/blog/2025/12/09/zephyr-4-1)
 - [zmk-feature-split-esb](https://github.com/badjeff/zmk-feature-split-esb)
+- [badjeff/zmk-pmw3610-driver](https://github.com/badjeff/zmk-pmw3610-driver)
 - [Donki36 ESB-only example](https://github.com/badjeff/zmk-config/tree/esb-shield-only/boards/shields/donki36)
 - [Nordic ESB overview](https://docs.nordicsemi.com/r/bundle/nrf5_sdk_v11.0.0/page/esb_users_guide.html)
 - [PMW3610 data sheet](https://trackballs.eu/media/Nakabayashi/Digio2/PMW3610DM-SUDU.pdf)

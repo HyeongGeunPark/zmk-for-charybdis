@@ -27,9 +27,23 @@
 | `charybdis_right-nice_nano@2.0.0__zmk-zmk.uf2` | `5E815517FD62397A882EB0EF5CA325A5E0DB20ACCCF44980BA15B570C93A3ED6` |
 | `settings_reset-nice_nano@2.0.0__zmk-zmk.uf2` | `0DD6BE82134D011C8EE58794940F87E03B4EAF8E859AB336EF123BCA190EEF3A` |
 
-여기까지는 compile 및 artifact 검증이다. 실제 키 매트릭스, BLE split, USB
-Studio와 재페어링은 하드웨어 smoke test가 남아 있다. 다음 구현 순서는 새
-PMW3610 driver, BLE dongle/input-split, ESB 순이다.
+여기까지는 compile 및 artifact 검증이다.
+
+## 하드웨어 검증 결과 (2026-09-19)
+
+위 표의 artifact를 left/right에 flash하여 실제 동작을 확인했다.
+
+- 재페어링 불필요: 기존 host bond가 유지되어 flash 후 바로 연결됐다.
+- 키 매트릭스, 좌·우 BLE split, USB 입력 모두 정상이다.
+- 트랙볼만 동작하지 않는다. sensor node와 driver를 의도적으로 제거한 결과이며
+  regression이 아니다.
+
+따라서 Zephyr 4.1 keyboard-only 기준선은 통과로 확정하고, 이 상태를 config
+repository의 작업 기준선(`my-keymap`)으로 삼는다. 다음 구현 순서는 새 PMW3610
+driver, BLE dongle/input-split, ESB다.
+
+이전 v0.3 + legacy driver 조합으로 되돌릴 계획은 없다. Rollback 대상은 이
+keyboard-only 기준선이며, §7의 v0.3 rollback 절차는 더 이상 유지하지 않는다.
 
 ## 1. 확정한 목표와 범위
 
@@ -120,29 +134,41 @@ split_inputs {
 - right의 기존 direct `zmk,input-listener`는 제거한다.
 - left에는 shared label resolution을 위해 node가 남되 disabled 상태다.
 
-### 2.5 PMW runtime behavior ABI
+### 2.5 Pointer 기능 구성
 
-Keymap의 기존 binding은 유지한다.
+> 2026-09-19 개정. 기존 custom driver의 runtime behavior ABI
+> (`PMW_CPI_INC`, `PMW_SNIPE_HOLD`, `PMW_DRAG_SCROLL` 등)는 폐기한다.
 
-- `PMW_CPI_INC` / `PMW_CPI_DEC`
-- `PMW_SNIPE_CPI_INC` / `PMW_SNIPE_CPI_DEC`
-- `PMW_SNIPE_HOLD`
-- `PMW_DRAG_SCROLL`
+ZMK 0.4는 pointer 가공을 sensor driver가 아니라 input-processor chain에서
+처리한다. 따라서 driver는 얇게 두고 기능은 keymap에서 구성한다.
 
-Driver behavior 변경 contract:
+채택 driver: [badjeff/zmk-pmw3610-driver](https://github.com/badjeff/zmk-pmw3610-driver)
 
-- locality: `BEHAVIOR_LOCALITY_GLOBAL`
-- sensor 없는 target: return success/no-op
-- right sensor target: 실제 state/CPI 변경
-- modifier-dependent parameter: central에서 Shift를 반영하여 INC/DEC로 변환 후
-  peripheral에 전달
-- press/release command 모두 idempotent하고 timeout 이후 stuck mode가 없어야 함
+- `zmk-feature-split-esb`와 같은 저자이므로 Phase 4까지 toolchain 정합성이
+  유지된다.
+- compatible `pixart,pmw3610-alt`, Kconfig `CONFIG_PMW3610_ALT_*`를 사용하여
+  Zephyr 4.1 native `pixart,pmw3610`과 충돌하지 않는다.
+- split peripheral shield에서 동작하도록 설계되어 §2.4 input-split과 맞는다.
+- scroll-mode, snipe-mode, auto-layer가 driver에서 제거되어 layer별
+  `zmk,input-listener` override로 구성한다.
+- `cpi`, `swap-xy`, `invert-x`, `invert-y`가 Kconfig가 아니라 devicetree
+  속성이다. multi-sensor와 shared SPI bus를 지원한다.
+- sampling rate와 reporting rate를 분리하고 interrupt 사이 변위를 누적한다.
+  `CONFIG_PMW3610_ALT_REPORT_INTERVAL_MIN`으로 RF 환경에 맞춰 조정한다.
+- `sensor_driver_api.attr_set`으로 `PMW3610_ALT_ATTR_CPI`와 downshift/sample
+  time을 runtime에 변경할 수 있다.
 
-Zephyr 4.1 port에서는 native driver와 충돌하지 않도록 다음 namespace를 쓴다.
+기능 대응:
 
-- compatible: `pixart,pmw3610-alt`
-- Kconfig: `PMW3610_ALT_*`
-- runtime dt-binding/keymap ABI: 기존 이름 유지
+| 기존 기능 | ZMK 0.4 구현 |
+| --- | --- |
+| pointer 이동 | `pixart,pmw3610-alt` + `zmk,input-listener` |
+| drag scroll | POINTER layer override + `&zip_xy_to_scroll_mapper`, `&zip_scroll_scaler` |
+| snipe | layer override + `&zip_xy_scaler` |
+| CPI inc/dec | `&zip_xy_scaler` 단계 전환, 또는 `attr_set` 기반 behavior |
+| automouse layer | `&zip_temp_layer` |
+| mouse button | `&mkp` (ZMK 내장) |
+| split 전송 | `zmk,input-split` (Phase 2·3), 이후 ESB (Phase 4) |
 
 ### 2.6 Studio와 keymap
 
@@ -176,23 +202,33 @@ Gate:
 - Baseline 두 half가 현재와 동일하게 정상 동작한다.
 - Rollback UF2 image와 각 checksum이 로컬에 존재한다.
 
-### Phase 1: PMW driver를 split-command-safe하게 변경
+### Phase 1: PMW3610 driver 교체
 
-인접 PMW driver repository에서:
+> 2026-09-19 개정. 기존 fork `HyeongGeunPark/zmk-pmw3610-driver`를 Zephyr 4.1로
+> port하지 않고 `badjeff/zmk-pmw3610-driver`로 교체한다. 레거시 유지 목표는 없다.
 
-1. Runtime behavior locality를 CENTRAL에서 GLOBAL로 바꾼다.
-2. Compile-time sensor node가 없는 target에서 `-ENODEV` 대신 성공 no-op한다.
-3. `binding_convert_central_state_dependent_params`를 구현한다.
-4. Central Shift 상태를 기준으로 CPI command 방향을 확정한다.
-5. `125_SW` 대신 250 Hz performance option을 사용한다.
-6. Current right-central topology로 먼저 build 및 regression test한다.
-7. 통과한 driver commit을 config manifest에 exact SHA로 pin한다.
+1. `config/west.yml`에 `badjeff` remote와 `zmk-pmw3610-driver` project를 exact
+   SHA로 pin한다. `main` branch가 zmk-0.4 line이다.
+2. `charybdis_right.overlay`에 spi0 pinctrl과 `pixart,pmw3610-alt` node를
+   복원한다. 기존 pin(SCK P0.08, MOSI/MISO P0.17, CS P0.20, IRQ P0.06)은 그대로
+   쓰고, `cpi`, `evt-type`, `x-input-code`, `y-input-code`를 devicetree에 둔다.
+3. 방향 설정을 이관한다. 기존 `CONFIG_PMW3610_ORIENTATION_90` +
+   `CONFIG_PMW3610_INVERT_X` 조합에 대응하는 `swap-xy` / `invert-x` /
+   `invert-y` 조합은 실측으로 확정한다.
+4. `charybdis_right.conf`에 `CONFIG_SPI`, `CONFIG_INPUT`, `CONFIG_PMW3610_ALT`를
+   켠다. nice!nano v2 + ext-power 구성이므로
+   `CONFIG_PMW3610_ALT_INIT_POWER_UP_EXTRA_DELAY_MS`를 먼저 적용하여
+   `Incorrect product id 0xFF` 초기화 실패를 회피한다.
+5. right shield에 `zmk,input-listener`를 두고 base processor chain을 구성한다.
+6. keymap POINTER layer에 listener override를 추가하여 snipe와 drag-scroll을
+   복원한다. `&pmw` behavior와 `PMW_*` define은 제거 상태로 둔다.
+7. build 통과 후 driver SHA를 config manifest에 고정한다.
 
 Gate:
 
-- Right-central에서 기존 CPI/snipe/drag 기능과 Shift reversal이 동일하다.
-- Continuous motion에서 약 250 fresh sample/s를 확인한다.
-- Sensor 없는 build target에 behavior를 포함해도 build/runtime error가 없다.
+- right-central에서 pointer 이동, snipe, drag-scroll, mouse button이 동작한다.
+- left와 settings-reset build target이 깨지지 않는다.
+- flash 후 BLE 재페어링이 발생하지 않는다.
 
 ### Phase 2: ZMK v0.3 BLE dongle
 
