@@ -623,6 +623,23 @@ dt-binding header가 없다. 단계는 400/600/800/1200이고 첫 값이 overlay
 
 Snipe는 선택된 CPI에서 `&zip_xy_scaler 1 2`로 비례하므로 따라 움직인다.
 
+함정: split behavior의 node 이름은 8자를 넘으면 안 된다. Central이
+peripheral로 behavior를 보낼 때 이름을 고정 길이 field에 담는데
+(`ZMK_SPLIT_RUN_BEHAVIOR_DEV_LEN` = 9, 8자 + null), 더 길면 잘린 채 도착하고
+peripheral은 그 이름의 behavior를 찾지 못해 `-EINVAL`로 실패한다. Build는
+통과하고 경고도 없으며, 증상은 "키를 눌러도 아무 일이 없다"뿐이다.
+
+처음 이름 `dpi_cycle`(9자)이 정확히 이 경우였다. Peripheral의 USB log에서만
+드러났다.
+
+```
+split_svc_run_behavior: dpi_cycl with params 1 0: pressed? 1
+<err> zmk: Failed to invoke behavior dpi_cycl: -22
+```
+
+같은 log가 GLOBAL locality와 이름 기반 behavior 조회는 정상임을 함께 보여
+주었다. 전달 자체는 처음부터 되고 있었다. 이름을 `dpi_cyc`로 줄여 해결했다.
+
 이 fork는 암호화 fork와 성격이 다르다. 결함이 동작으로 즉시 드러나고, 규모가
 파일 하나이며, 실패해도 기능 하나를 잃을 뿐이다.
 
