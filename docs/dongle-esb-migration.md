@@ -230,6 +230,14 @@ Gate:
 - left와 settings-reset build target이 깨지지 않는다.
 - flash 후 BLE 재페어링이 발생하지 않는다.
 
+함정: devicetree는 Kconfig보다 먼저 preprocess된다
+(`zephyr_default.cmake`의 module 순서가 `dts` 다음 `kconfig`). 따라서 keymap이나
+overlay에서 `#if defined(CONFIG_SHIELD_CHARYBDIS_RIGHT)` 같은 guard를 쓰면 항상
+거짓이고, 그 블록은 **빌드 에러 없이 조용히 사라진다**. shield별 DTS는 해당
+shield의 overlay에 직접 둬야 한다. 기존 v0.3 keymap의 `&trackball` override도
+같은 이유로 적용된 적이 없었다. Phase 2·3에서 dongle overlay를 만들 때 다시
+밟기 쉬운 함정이다.
+
 구현 상태 (2026-09-19): 위 1~7을 `my-keymap`에 적용했다. driver pin은
 `44b4a76b74d293a93cec4ccb7e04cb8d29c10f93`이다. snipe와 drag-scroll은 POINTER
 layer의 기존 키 위치에 `&mo SNIPE` / `&mo SCROLL`로 두고, 두 layer는 binding이

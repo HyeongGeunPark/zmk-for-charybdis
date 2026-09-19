@@ -3,16 +3,21 @@
 #include <dt-bindings/zmk/keys.h>
 #include <dt-bindings/zmk/mouse.h>
 #include <dt-bindings/zmk/outputs.h>
-#include <input/processors.dtsi>
-#include <dt-bindings/zmk/input_transform.h>
 
 #define BASE 0
 #define SYMBOLS 1
 // #define UTILITY 2
 #define POINTER 2
 #define DANGER 3
-/* Pointer mode layers. These carry no key bindings; they exist so the
-   trackball's input processor chain can be swapped while a key is held. */
+/*
+ * Pointer mode layers. These carry no key bindings; they exist so the
+ * trackball's input processor chain can be swapped while a key is held.
+ *
+ * The listener that reacts to them lives in charybdis_right.overlay and
+ * spells these numbers out, because devicetree is preprocessed before
+ * Kconfig and so cannot be made conditional on the shield. Keep the two in
+ * sync by hand.
+ */
 #define SCROLL 4
 #define SNIPE 5
 
@@ -31,28 +36,6 @@
 &sensors {
     status = "disabled";
 };
-
-#if defined(CONFIG_SHIELD_CHARYBDIS_RIGHT)
-/* The base chain is plain pointer motion. Holding a mode key activates a
-   layer whose only effect is to swap in a different chain for the trackball. */
-&trackball_listener {
-    scroller {
-        layers = <SCROLL>;
-        /* Map the two axes onto the wheels, then require several counts per
-           wheel tick. 24 is where the old runtime drag scroll ended up. */
-        input-processors = <&zip_xy_to_scroll_mapper>, <&zip_scroll_scaler 1 24>;
-        /* If scrolling runs the wrong way, insert
-           <&zip_scroll_transform INPUT_TRANSFORM_Y_INVERT> after the mapper. */
-    };
-
-    sniper {
-        layers = <SNIPE>;
-        /* Half speed, matching the old driver's 200 CPI snipe mode against
-           its 400 CPI default. */
-        input-processors = <&zip_xy_scaler 1 2>;
-    };
-};
-#endif
 
 / {
     chosen {

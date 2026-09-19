@@ -6,6 +6,8 @@
  
 #include "charybdis.dtsi"
 #include <zephyr/dt-bindings/input/input-event-codes.h>
+#include <input/processors.dtsi>
+#include <dt-bindings/zmk/input_transform.h>
 
 &default_transform {
     col-offset = <6>;
@@ -80,8 +82,35 @@
     trackball_listener {
         compatible = "zmk,input-listener";
         device = <&trackball>;
-        /* Layer overrides for scroll and snipe live in charybdis.keymap,
-           where the layer numbers are defined. */
+
+        /*
+         * The base chain is plain pointer motion. Holding a mode key on the
+         * Pointer layer activates a layer whose only effect is to swap in a
+         * different chain here.
+         *
+         * These have to be the raw layer numbers. Devicetree is preprocessed
+         * before Kconfig, so this cannot live in charybdis.keymap behind a
+         * CONFIG_SHIELD_CHARYBDIS_RIGHT guard -- such a guard is always false
+         * and silently drops the whole block. Keep in sync with the SCROLL
+         * and SNIPE defines in charybdis.keymap.
+         */
+        scroller {
+            /* SCROLL */
+            layers = <4>;
+            /* Map the two axes onto the wheels, then require several counts
+               per wheel tick. 24 is where the old drag scroll ended up. */
+            input-processors = <&zip_xy_to_scroll_mapper>, <&zip_scroll_scaler 1 24>;
+            /* If scrolling runs the wrong way, insert
+               <&zip_scroll_transform INPUT_TRANSFORM_Y_INVERT> after the mapper. */
+        };
+
+        sniper {
+            /* SNIPE */
+            layers = <5>;
+            /* Half speed, matching the old driver's 200 CPI snipe mode
+               against its 400 CPI default. */
+            input-processors = <&zip_xy_scaler 1 2>;
+        };
     };
 };
 
