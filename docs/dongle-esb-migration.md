@@ -402,6 +402,21 @@ dependency 추가와 transport 전환을 한 커밋에서 함께 수행한다.
   `behavior_bt.c`가 아예 build되지 않으므로 이는 선택이 아니라 필수다.
   `&out OUT_USB`는 BLE와 무관하게 build되므로 남긴다.
 
+함정: `CONFIG_ZMK_SPLIT_BLE_CENTRAL_PERIPHERALS`는 이름과 달리 BLE를 꺼도
+central에 반드시 설정해야 한다. ESB module이 `ZMK_SPLIT && !ZMK_SPLIT_BLE`
+블록에서 peripheral battery state용으로 이 심볼을 재정의하는데 default가 없다.
+`ZMK_SPLIT_ROLE_CENTRAL`에서만 활성화되므로 dongle build만 빈 값을 갖게 되고,
+Zephyr가 생성하는 `misc/generated/configs.c`가 그것을 `.equ CONFIG_..., `로
+바꾸면서 assembler가 `missing expression`으로 죽는다. Error message에 심볼
+이름이 없어 원인을 찾기 어렵다.
+
+같은 함정이 default 없는 다른 Kconfig int에도 적용된다. 확인 방법은 build
+tree에서 값 없는 define을 직접 찾는 것이다.
+
+```
+grep -nE '^#define CONFIG_[A-Za-z0-9_]+[[:space:]]*$'   build/zephyr/include/generated/zephyr/autoconf.h
+```
+
 이 전환으로 잃는 것:
 
 - Host BLE profile 5개. Dongle은 USB 전용이 되고, 기기 전환은 dongle을 옮겨
