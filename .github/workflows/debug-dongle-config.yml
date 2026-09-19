@@ -42,21 +42,24 @@ jobs:
       # annotations REST endpoint stays readable. One annotation per finding,
       # so no newline escaping is involved.
       - name: Report empty CONFIG defines
+        shell: bash
         run: |
-          AC=build/zephyr/include/generated/zephyr/autoconf.h
-          CC=build/zephyr/misc/generated/configs.c
+          set +e
 
-          found=0
-          while IFS= read -r line; do
-            found=1
-            echo "::error title=Empty define::${line}"
-          done < <(grep -nE '^#define CONFIG_[A-Za-z0-9_]+[[:space:]]*$' "$AC" || true)
+          AC=$(find build -name autoconf.h -path '*generated*' 2>/dev/null | head -1)
+          CC=$(find build -name configs.c -path '*generated*' 2>/dev/null | head -1)
+          echo "::error title=paths::AC=${AC:-MISSING} CC=${CC:-MISSING}"
 
-          while IFS= read -r line; do
-            found=1
-            echo "::error title=Empty configs.c arg::${line}"
-          done < <(grep -nE 'GEN_ABSOLUTE_SYM_KCONFIG\([^,]+,[[:space:]]*\)' "$CC" || true)
-
-          if [ "$found" = "0" ]; then
-            echo "::error title=Nothing found::no empty CONFIG define in autoconf.h"
+          if [ -n "$AC" ]; then
+            grep -nE '^#define CONFIG_[A-Za-z0-9_]+[[:space:]]*$' "$AC" | head -20 | while IFS= read -r l; do
+              echo "::error title=Empty define::$l"
+            done
           fi
+
+          if [ -n "$CC" ]; then
+            grep -nE 'GEN_ABSOLUTE_SYM_KCONFIG\([^,]+, *\)' "$CC" | head -20 | while IFS= read -r l; do
+              echo "::error title=Empty arg::$l"
+            done
+          fi
+
+          exit 0
