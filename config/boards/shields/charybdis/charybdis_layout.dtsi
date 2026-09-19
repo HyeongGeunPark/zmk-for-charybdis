@@ -104,16 +104,23 @@
          * attr 0 is PMW3610_ALT_ATTR_CPI, the first value of the driver's
          * enum pmw3610_alt_attribute. It has no dt-binding header to include.
          *
-         * The first value matches the cpi property in charybdis_right.overlay
-         * so the cycle starts where the sensor already is. Snipe scales from
+         * 400 matches the cpi property in charybdis_right.overlay, so the
+         * cycle passes through where the sensor starts. Snipe scales from
          * whichever value is selected, so it follows along.
+         *
+         * The spread is deliberately wide while this is being verified: 200
+         * against 1600 is eight times, which cannot be mistaken for no change.
+         * Narrow it once stepping is known to work.
+         *
+         * Not persisted. Writing every step to flash buys little -- starting
+         * from the overlay's cpi on each boot is easier to reason about -- and
+         * it keeps one fewer thing in play.
          */
         dpi: dpi_cycle {
             compatible = "zmk,behavior-sensor-attr-cycle";
             #binding-cells = <1>;
             attr = <0>;
-            values = <400 600 800 1200>;
-            persistant;
+            values = <400 800 1600 200>;
         };
     };
 };

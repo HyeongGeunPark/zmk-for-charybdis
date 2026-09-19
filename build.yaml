@@ -28,6 +28,16 @@ include:
   - board: nice_nano@2.0.0//zmk
     shield: charybdis_right
     artifact-name: charybdis_right
+  # Diagnostic build of the right half, same as above plus USB logging, for
+  # watching the trackball driver over a serial console. The driver logs every
+  # CPI change, so this says whether a CPI keypress reaches the sensor at all.
+  # Not for daily use; delete this entry once that question is settled.
+  - board: nice_nano@2.0.0//zmk
+    shield: charybdis_right
+    snippet: zmk-usb-logging
+    cmake-args: -DCONFIG_PMW3610_ALT_LOG_LEVEL_DBG=y
+    artifact-name: charybdis_right_usblog
+
   # Flash this on all three boards before the first dongle firmware.
   - board: nice_nano@2.0.0//zmk
     shield: settings_reset
