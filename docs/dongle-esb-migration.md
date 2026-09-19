@@ -242,11 +242,18 @@ shield의 overlay에 직접 둬야 한다. 기존 v0.3 keymap의 `&trackball` ov
 `44b4a76b74d293a93cec4ccb7e04cb8d29c10f93`이다. snipe와 drag-scroll은 POINTER
 layer의 기존 키 위치에 `&mo SNIPE` / `&mo SCROLL`로 두고, 두 layer는 binding이
 전부 `&trans`인 pointer mode layer다. CPI inc/dec는 대체 구현 없이 비워 두었다.
-하드웨어 확인 대상은 다음 세 가지다.
+하드웨어 검증 (2026-09-19): pointer 이동, snipe, drag-scroll 모두 동작을
+확인했다. 축 방향(`swap-xy` + `invert-x` + `invert-y`)과 snipe 배율, scroll
+분모 24는 그대로 둔다. 이어서 두 가지를 반영했다.
 
-- 축 방향: `swap-xy` + `invert-x` + `invert-y` 조합이 기존 체감과 같은지
-- drag-scroll 방향과 `zip_scroll_scaler` 분모 24
-- `CONFIG_PMW3610_ALT_INIT_POWER_UP_EXTRA_DELAY_MS=1000`을 줄일 수 있는지
+- SYMBOLS layer(1)를 scroll layer로 복원했다. v0.4 이전에는 overlay의
+  `scroll-layers = <1>`로 동작하던 것이며, keymap의 override가 위 guard 때문에
+  적용된 적이 없어 유지되고 있었다.
+- scroll 방향을 수직·수평 모두 반전했다
+  (`zip_scroll_transform (INPUT_TRANSFORM_X_INVERT | INPUT_TRANSFORM_Y_INVERT)`).
+
+남은 tuning 항목은 `CONFIG_PMW3610_ALT_INIT_POWER_UP_EXTRA_DELAY_MS=1000`을
+줄일 수 있는지 하나다.
 
 ### Phase 2: ZMK v0.3 BLE dongle
 

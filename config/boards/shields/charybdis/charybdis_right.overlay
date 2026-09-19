@@ -91,17 +91,20 @@
          * These have to be the raw layer numbers. Devicetree is preprocessed
          * before Kconfig, so this cannot live in charybdis.keymap behind a
          * CONFIG_SHIELD_CHARYBDIS_RIGHT guard -- such a guard is always false
-         * and silently drops the whole block. Keep in sync with the SCROLL
-         * and SNIPE defines in charybdis.keymap.
+         * and silently drops the whole block. Keep in sync with the SYMBOLS,
+         * SCROLL and SNIPE defines in charybdis.keymap.
          */
         scroller {
-            /* SCROLL */
-            layers = <4>;
-            /* Map the two axes onto the wheels, then require several counts
-               per wheel tick. 24 is where the old drag scroll ended up. */
-            input-processors = <&zip_xy_to_scroll_mapper>, <&zip_scroll_scaler 1 24>;
-            /* If scrolling runs the wrong way, insert
-               <&zip_scroll_transform INPUT_TRANSFORM_Y_INVERT> after the mapper. */
+            /* SYMBOLS and SCROLL. Holding the symbol layer has scrolled the
+               trackball since before the v0.4 move, so it stays a scroll
+               layer alongside the dedicated one. */
+            layers = <1 4>;
+            /* Map the two axes onto the wheels, invert both directions, then
+               require several counts per wheel tick. 24 is where the old drag
+               scroll ended up. */
+            input-processors = <&zip_xy_to_scroll_mapper>,
+                <&zip_scroll_transform (INPUT_TRANSFORM_X_INVERT | INPUT_TRANSFORM_Y_INVERT)>,
+                <&zip_scroll_scaler 1 24>;
         };
 
         sniper {

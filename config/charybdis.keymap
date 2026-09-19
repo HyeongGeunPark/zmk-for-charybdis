@@ -5,6 +5,7 @@
 #include <dt-bindings/zmk/outputs.h>
 
 #define BASE 0
+/* Also a scroll layer: see the listener in charybdis_right.overlay. */
 #define SYMBOLS 1
 // #define UTILITY 2
 #define POINTER 2
@@ -13,10 +14,10 @@
  * Pointer mode layers. These carry no key bindings; they exist so the
  * trackball's input processor chain can be swapped while a key is held.
  *
- * The listener that reacts to them lives in charybdis_right.overlay and
- * spells these numbers out, because devicetree is preprocessed before
- * Kconfig and so cannot be made conditional on the shield. Keep the two in
- * sync by hand.
+ * The listener that reacts to them, and to SYMBOLS, lives in
+ * charybdis_right.overlay and spells these numbers out, because devicetree
+ * is preprocessed before Kconfig and so cannot be made conditional on the
+ * shield. Keep the two in sync by hand.
  */
 #define SCROLL 4
 #define SNIPE 5
