@@ -594,6 +594,38 @@ ESB 작업은 `esb` branch와 `esb-dongle-verified` tag로 보존한다. 암호�
 미해결로 남는 것: public repository에 노출된 ESB address는 폐기 대상이나, BLE로
 돌아오면서 무의미해졌다. 기존 public fork 저장소의 처분은 별도 결정이다.
 
+### 런타임 CPI 복원 (2026-09-20)
+
+Phase 1에서 대체 구현 없이 비워 두었던 CPI inc/dec를 복원했다. 원래 키 위치인
+POINTER layer의 `&dpi (-1)` / `&dpi 1`이며, input processor scaling이 아니라
+sensor의 실제 CPI를 바꾼다. Driver가 이미 `sensor_driver_api.attr_set`으로
+`PMW3610_ALT_ATTR_CPI`를 노출하고 있어 driver는 수정하지 않았다.
+
+Behavior module은 fork했다:
+[HyeongGeunPark/zmk-behavior-sensor-attr-cycle](https://github.com/HyeongGeunPark/zmk-behavior-sensor-attr-cycle)
+(`c786d81`). Upstream 그대로는 이 구성에서 쓸 수 없었다.
+
+- Locality가 `EVENT_SOURCE`라 키를 누른 half에서 실행된다. CPI 키는 왼쪽,
+  sensor는 오른쪽이므로 닿지 않는다. `GLOBAL`로 바꿨다.
+- `sensor_device`가 compile time에 해석되는 required phandle이라, sensor node가
+  없는 target은 link에 실패한다. Keymap이 공유이므로 dongle과 left가 깨진다.
+  Optional로 바꾸고 press handler와 settings load callback에 NULL guard를
+  넣었다. Sensor 없는 node도 index는 갱신하여 서로 어긋나지 않게 한다.
+- 역방향 cycling이 동작하지 않았다. `param1`이 unsigned여서 `-1`이
+  0xFFFFFFFF로 도착한다. Signed로 계산하고 음수 나머지를 보정했다.
+
+DTS 구성: behavior node는 `charybdis_layout.dtsi`에 두어 세 target 모두가
+갖고, `sensor_device`는 `charybdis_right.overlay`에서만 연결한다. `attr = <0>`은
+driver의 `enum pmw3610_alt_attribute` 첫 값인 `PMW3610_ALT_ATTR_CPI`이며 참조할
+dt-binding header가 없다. 단계는 400/600/800/1200이고 첫 값이 overlay의 `cpi`와
+같아 cycle이 현재 상태에서 시작한다. `persistant`로 right의 settings에 저장되어
+재부팅 후에도 유지된다.
+
+Snipe는 선택된 CPI에서 `&zip_xy_scaler 1 2`로 비례하므로 따라 움직인다.
+
+이 fork는 암호화 fork와 성격이 다르다. 결함이 동작으로 즉시 드러나고, 규모가
+파일 하나이며, 실패해도 기능 하나를 잃을 뿐이다.
+
 ## 4. CI와 build 전략
 
 현재 PC에는 이 project용 west/Zephyr SDK workspace가 없으므로 GitHub Actions를

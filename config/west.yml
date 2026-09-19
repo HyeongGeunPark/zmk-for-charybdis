@@ -4,6 +4,8 @@ manifest:
       url-base: https://github.com/zmkfirmware
     - name: badjeff
       url-base: https://github.com/badjeff
+    - name: HyeongGeunPark
+      url-base: https://github.com/HyeongGeunPark
   projects:
     - name: zmk
       remote: zmkfirmware
@@ -11,11 +13,17 @@ manifest:
       import: app/west.yml
     # PMW3610 driver for the Zephyr 4.1 line. Uses the pixart,pmw3610-alt
     # compatible and CONFIG_PMW3610_ALT_* so it does not collide with the
-    # native Zephyr binding. Same author as zmk-feature-split-esb, which this
-    # configuration moves to in a later phase.
+    # native Zephyr binding.
     - name: zmk-pmw3610-driver
       remote: badjeff
       revision: 44b4a76b74d293a93cec4ccb7e04cb8d29c10f93
+    # Runtime CPI cycling. Forked from badjeff, itself from george-norton, to
+    # work on a split where the sensor is on one half and the keys that change
+    # it are on the other: locality is GLOBAL and the sensor phandle optional,
+    # so the behavior can be declared once for the whole keyboard.
+    - name: zmk-behavior-sensor-attr-cycle
+      remote: HyeongGeunPark
+      revision: c786d81c0fb138b4fc9a795aac031f22639fa323
 
   self:
     path: config
