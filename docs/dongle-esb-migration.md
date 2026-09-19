@@ -311,12 +311,51 @@ Flash 전 필요한 것:
   있으면 dongle이 두 half를 잡지 못한다. 이 과정에서 host 재페어링도 한 번
   발생한다.
 
-### Phase 3: ESB dependency 추가, split은 BLE 유지
+### Phase 3: 폐기 (BLE와 NCS는 공존할 수 없다)
 
-> 2026-09-19 개정. 1~4번과 6번은 Phase 1·2에서 이미 끝났다. 실제로 남은 것은
-> 5번, 즉 ESB module과 NCS를 manifest에 올리되 transport는 끄는 작업이다.
-> 이 gate의 목적은 dependency 추가로 인한 regression과 transport 전환으로
-> 인한 regression을 분리하는 것이다.
+> 2026-09-19. 이 phase는 성립하지 않는다. 시도했고, 실패했으며, 그 실패가
+> Phase 4의 전제를 바꾼다.
+
+원래 의도는 최종 dependency를 적용하되 split은 BLE로 둬서, dependency로 인한
+regression과 transport 전환으로 인한 regression을 분리하는 것이었다. 1~4번과
+6번은 Phase 1·2에서 이미 충족되었으므로 남은 것은 ESB module과 NCS를
+manifest에 올리는 5번뿐이었다.
+
+Manifest에 `zmk-feature-split-esb`, `badjeff/sdk-nrf`, `nrfconnect/sdk-nrfxlib`
+세 project를 추가했다(세 revision 모두 당시 각 branch HEAD와 일치). 결과는
+CMake generate 실패다.
+
+```
+CMake Error at nrf/subsys/nrf_security/src/CMakeLists.txt:96 (add_library):
+  Cannot find source file: /programs/ssl/library/pk.c
+No SOURCES given to target: mbedcrypto / psa_core / oberon_psa_driver
+```
+
+경로가 `/programs/...`로 시작하는 것은 mbedtls module path 변수가 빈
+문자열이기 때문이다. NCS가 workspace에 들어오면 Zephyr의 mbedtls 대신 자신의
+`nrf_security`로 BLE crypto를 처리하려 하는데, 그것이 요구하는 NCS용 mbedtls
+fork가 manifest에 없다. Build log의 `Generating psa_crypto_config` 단계가
+`nrf_security`가 개입한 증거다.
+
+ESB source 자체는 `if(CONFIG_ZMK_SPLIT_ESB)` 안에 있어 컴파일되지 않았다.
+깨진 것은 transport가 아니라 NCS와 BLE의 공존이다.
+
+이는 module README의 다음 문장 그대로다.
+
+> UPDATE FOR ZMK 0.4: I'm too stupid to make BLE security libraries in NCS 3.1
+> be compiled on Zephyr 4.1.
+
+조사 문서는 이 문장을 runtime topology 제약으로 기록했으나 실제로는 **build
+제약**이다. 저자의 동작하는 reference config가 `CONFIG_ZMK_BLE=n`인 것도 같은
+이유다.
+
+결론: NCS를 manifest에 두는 것과 BLE를 켜는 것은 양립하지 않는다. 따라서 이
+phase는 폐기하고, dependency 추가와 transport 전환은 Phase 4에서 한 번에
+수행한다. 분리 검증은 불가능하다는 것이 이 phase의 산출물이다.
+
+Commit `e30caee`에서 시도했고 `HEAD`에서 revert했다.
+
+### Phase 3 (원안, 참고용): Pinned Zephyr 4.1 stack, BLE 유지
 
 Manifest pins:
 
@@ -337,23 +376,6 @@ Implementation:
    구현하고, resulting tested commit을 exact SHA로 pin한다.
 5. ESB module은 manifest에 있어도 transport는 disabled 상태로 둔다.
 6. Phase 2의 전체 BLE-dongle regression을 반복한다.
-
-구현 상태 (2026-09-19): 5번을 `my-keymap`에 적용했다. 위 세 revision은 모두
-확인 시점에 각 branch HEAD와 일치했다.
-
-- `CONFIG_ZMK_SPLIT_ESB`는 default n이므로 module이 manifest에 있어도 split은
-  BLE로 남는다. 의도를 명시하기 위해 `config/charybdis.conf`에 `=n`을 적어
-  두었고, Phase 4는 이 줄을 y로 바꾸는 것에서 시작한다.
-- NCS는 upstream이 아니라 author fork(`v3.1-branch+zmk-fixes`)를 쓴다. 정식
-  NCS 3.1은 Zephyr 4.1에서 CMake config validation을 통과하지 못한다.
-- 비용: sdk-nrf와 nrfxlib이 workspace에 들어오면서 CI checkout/build 시간이
-  크게 늘어난다. 이번 gate는 이 비용을 감수하고 dependency만의 영향을 본다.
-
-Phase 4 착수 전 확정해야 할 제약: ZMK 0.4 기준 이 module은 BLE와 ESB 동시
-사용을 지원하지 않는다. README에서 dual-topology 설명이 취소선 처리되었고,
-남은 topology는 USB-only dongle + ESB peripherals 하나뿐이다. 즉 Phase 4로
-가면 host BLE profile을 잃고 dongle은 USB 전용이 된다. §2.6이 `BT_SEL`,
-`BT_CLR`, `OUT_BLE`를 `&none`으로 바꾸라고 한 것이 이 제약이다.
 
 Gate:
 
