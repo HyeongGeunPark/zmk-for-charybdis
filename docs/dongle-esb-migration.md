@@ -249,11 +249,12 @@ layer의 기존 키 위치에 `&mo SNIPE` / `&mo SCROLL`로 두고, 두 layer는
 - SYMBOLS layer(1)를 scroll layer로 복원했다. v0.4 이전에는 overlay의
   `scroll-layers = <1>`로 동작하던 것이며, keymap의 override가 위 guard 때문에
   적용된 적이 없어 유지되고 있었다.
-- scroll 방향을 수직·수평 모두 반전했다
-  (`zip_scroll_transform (INPUT_TRANSFORM_X_INVERT | INPUT_TRANSFORM_Y_INVERT)`).
+- scroll 방향은 수평만 반전한다
+  (`zip_scroll_transform INPUT_TRANSFORM_X_INVERT`). 처음에 수직까지 함께
+  반전했으나 수직은 원래 방향이 맞아 되돌렸다.
+- `CONFIG_PMW3610_ALT_INIT_POWER_UP_EXTRA_DELAY_MS`를 1000에서 300으로 줄였다.
 
-남은 tuning 항목은 `CONFIG_PMW3610_ALT_INIT_POWER_UP_EXTRA_DELAY_MS=1000`을
-줄일 수 있는지 하나다.
+Phase 1은 이로써 종료한다.
 
 ### Phase 2: ZMK v0.3 BLE dongle
 
