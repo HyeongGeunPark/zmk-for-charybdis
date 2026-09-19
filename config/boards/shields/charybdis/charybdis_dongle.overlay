@@ -1,7 +1,7 @@
 /*
  * Dongle: the only central. It has no matrix of its own, so it takes the
  * shared layout and a mock kscan, and receives key positions and trackball
- * motion from the two halves over ESB.
+ * motion from the two halves over BLE.
  */
 
 #include "charybdis_layout.dtsi"
@@ -51,10 +51,9 @@
         scroller {
             /* SYMBOLS and SCROLL */
             layers = <1 4>;
-            /* Counts per wheel step. Smooth scrolling makes each step worth
-               much less than a full tick, so this has to be far lower than
-               the 24 that suited plain ticks: 8 still scrolled too slowly,
-               hence 2. Raise it if scrolling now overshoots. */
+            /* Counts per wheel step. Smooth scrolling makes a step worth
+               far less than a full tick, so this sits well below the 24 that
+               suited plain ticks. Tuned on hardware: 8 was still too slow. */
             input-processors = <&zip_xy_to_scroll_mapper>,
                 <&zip_scroll_transform INPUT_TRANSFORM_X_INVERT>,
                 <&zip_scroll_scaler 1 2>;

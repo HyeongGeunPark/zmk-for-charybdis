@@ -547,6 +547,53 @@ Gate:
   모두 통과한다.
 - Gate 실패 시 ACK/CRC를 끄거나 결과를 true 1 kHz라고 표기하지 않는다.
 
+### Phase 5: ESB 철회, BLE split 복귀 (2026-09-20)
+
+ESB는 동작했고 hardware에서 검증까지 마쳤으나 되돌린다. 이유는 latency가
+아니라 **암호화 부재**다.
+
+`zmk-feature-split-esb` source 전체에 AES/CCM/encrypt 관련 code가 없다.
+Kconfig의 `key`는 전부 key position이지 암호 key가 아니며,
+`ZMK_SPLIT_ESB_MSG_POSTFIX_CRC`의 CRC는 전파 잡음 검출용이지 기밀성도
+인증도 아니다. ESB address 역시 authentication이 아니라 수신 filter다.
+
+그 결과 두 방향의 노출이 있었다.
+
+- 읽기: key position과 trackball 좌표가 평문으로 방송된다. nRF52 board 한
+  장으로 캡처 가능하고, keymap이 공개되어 있으므로 문자로 복원된다.
+- 쓰기: 인증이 없으므로 임의 key 입력을 central에 주입할 수 있고, 캡처한
+  packet의 replay를 막을 장치도 없다.
+
+Channel hopping은 방어가 아니다. `CH_MIN=5, STEP=18, COUNT=4`로 결정적으로
+순환하며, 이 설정과 address 모두 public repository에 commit되어 있었다.
+
+BLE split은 bonding과 AES-CCM link 암호화를 쓴다. 직접 암호화를 구현하는
+선택지는 검토 후 기각했다. 암호화만으로는 부족하고 인증과 replay counter가
+함께 필요하며, nonce 재사용 같은 결함은 **동작 test로 드러나지 않는다**.
+NCS crypto를 켜는 순간 Phase 3에서 build를 깨뜨린 `nrf_security` 문제도 다시
+만난다.
+
+전환 비용:
+
+- Split hop이 약 1 ms에서 7.5 ms로 돌아간다. 다만 dongle이 USB 직결이라는
+  이점은 그대로이며, ESB 이전에도 이 값으로 사용해 왔다.
+- 되찾는 것: link 암호화, host BLE profile 5개, battery 표시.
+- Set 분리가 불필요해진다. BLE는 bonding으로 구분되므로 두 set이 가까이
+  있어도 서로의 half를 받지 않는다. ESB에서 address를 손으로 관리하던
+  `config/esb_set_b.overlay`와 set별 build target은 제거했다.
+
+ESB 이후 추가된 기능 중 transport와 무관한 세 가지는 이관했다.
+
+- `CONFIG_PMW3610_ALT_INIT_POWER_UP_EXTRA_DELAY_MS` 100 (cold boot 검증)
+- `CONFIG_ZMK_POINTING_SMOOTH_SCROLLING=y`
+- `zip_scroll_scaler 1 2`
+
+ESB 작업은 `esb` branch와 `esb-dongle-verified` tag로 보존한다. 암호화 문제가
+해결되면 재개할 수 있다.
+
+미해결로 남는 것: public repository에 노출된 ESB address는 폐기 대상이나, BLE로
+돌아오면서 무의미해졌다. 기존 public fork 저장소의 처분은 별도 결정이다.
+
 ## 4. CI와 build 전략
 
 현재 PC에는 이 project용 west/Zephyr SDK workspace가 없으므로 GitHub Actions를

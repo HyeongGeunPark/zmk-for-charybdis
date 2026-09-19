@@ -11,48 +11,24 @@
 #   - board: nice_nano@2.0.0//zmk
 #     shield: reviung41
 #
-# Two identical keyboard sets are built. They differ only in their ESB
-# address, which is what keeps them apart on the air -- ESB has no pairing, so
-# two sets sharing an address would have each dongle accepting the other's
-# halves. Set A takes the address in charybdis_layout.dtsi; set B overrides it.
-#
-# artifact-name carries both the set and the role, because flashing a set B
-# half onto a set A board leaves a half that simply never connects, with
-# nothing to say why.
+# artifact-name is set on every entry so the role is unmistakable in the
+# merged firmware artifact, and the wrong UF2 does not end up on a board.
 ---
 include:
-  # ---- Set A ----
+  # The only central: USB HID to the host, plus Studio.
   - board: nice_nano@2.0.0//zmk
     shield: charybdis_dongle
     snippet: studio-rpc-usb-uart
-    artifact-name: set_a-charybdis_dongle
+    artifact-name: charybdis_dongle
+  # Both halves are peripherals; the role comes from Kconfig.defconfig, which
+  # no longer makes the right half central.
   - board: nice_nano@2.0.0//zmk
     shield: charybdis_left
-    artifact-name: set_a-charybdis_left
+    artifact-name: charybdis_left
   - board: nice_nano@2.0.0//zmk
     shield: charybdis_right
-    artifact-name: set_a-charybdis_right
-
-  # ---- Set B ----
-  # $GITHUB_WORKSPACE is expanded by the shell that runs west, and is where the
-  # config is checked out as long as this repository is not a ZMK module. If it
-  # ever becomes one, ZMK copies the config elsewhere and this path has to
-  # follow.
-  - board: nice_nano@2.0.0//zmk
-    shield: charybdis_dongle
-    snippet: studio-rpc-usb-uart
-    cmake-args: -DEXTRA_DTC_OVERLAY_FILE=$GITHUB_WORKSPACE/config/esb_set_b.overlay
-    artifact-name: set_b-charybdis_dongle
-  - board: nice_nano@2.0.0//zmk
-    shield: charybdis_left
-    cmake-args: -DEXTRA_DTC_OVERLAY_FILE=$GITHUB_WORKSPACE/config/esb_set_b.overlay
-    artifact-name: set_b-charybdis_left
-  - board: nice_nano@2.0.0//zmk
-    shield: charybdis_right
-    cmake-args: -DEXTRA_DTC_OVERLAY_FILE=$GITHUB_WORKSPACE/config/esb_set_b.overlay
-    artifact-name: set_b-charybdis_right
-
-  # Identical for both sets; flash it on any board before its first firmware.
+    artifact-name: charybdis_right
+  # Flash this on all three boards before the first dongle firmware.
   - board: nice_nano@2.0.0//zmk
     shield: settings_reset
     artifact-name: settings_reset
