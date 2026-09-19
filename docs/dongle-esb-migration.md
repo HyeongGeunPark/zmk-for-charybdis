@@ -640,6 +640,10 @@ split_svc_run_behavior: dpi_cycl with params 1 0: pressed? 1
 같은 log가 GLOBAL locality와 이름 기반 behavior 조회는 정상임을 함께 보여
 주었다. 전달 자체는 처음부터 되고 있었다. 이름을 `dpi_cyc`로 줄여 해결했다.
 
+검증 완료 (2026-09-20): 이름 수정 후 hardware에서 CPI 단계 전환이 동작한다.
+진단용으로 쓰던 넓은 간격(200~1600)과 `charybdis_right_usblog` build target은
+제거했고, 단계는 400/600/800/1200이다.
+
 이 fork는 암호화 fork와 성격이 다르다. 결함이 동작으로 즉시 드러나고, 규모가
 파일 하나이며, 실패해도 기능 하나를 잃을 뿐이다.
 

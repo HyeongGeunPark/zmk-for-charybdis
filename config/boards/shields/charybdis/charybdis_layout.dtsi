@@ -111,22 +111,18 @@
          * build time; it just silently does nothing on the half that matters.
          *
          * 400 matches the cpi property in charybdis_right.overlay, so the
-         * cycle passes through where the sensor starts. Snipe scales from
+         * cycle starts where the sensor already sits. Snipe scales from
          * whichever value is selected, so it follows along.
          *
-         * The spread is deliberately wide while this is being verified: 200
-         * against 1600 is eight times, which cannot be mistaken for no change.
-         * Narrow it once stepping is known to work.
-         *
-         * Not persisted. Writing every step to flash buys little -- starting
-         * from the overlay's cpi on each boot is easier to reason about -- and
-         * it keeps one fewer thing in play.
+         * Not persisted: starting from the overlay's cpi on every boot is
+         * easier to reason about than tracking what flash last held, and it
+         * avoids writing to flash on every step.
          */
         dpi: dpi_cyc {
             compatible = "zmk,behavior-sensor-attr-cycle";
             #binding-cells = <1>;
             attr = <0>;
-            values = <400 800 1600 200>;
+            values = <400 600 800 1200>;
         };
     };
 };
