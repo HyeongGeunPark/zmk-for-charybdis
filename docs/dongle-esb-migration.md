@@ -439,6 +439,25 @@ grep -nE '^#define CONFIG_[A-Za-z0-9_]+[[:space:]]*$'   build/zephyr/include/gen
   수단이 사라진다. `ZMK_BATTERY_REPORTING`은 peripheral이 central에 값을
   올리는 경로로 남겨 두었으나 현재 표시 수단이 없다.
 
+두 번째 세트 (2026-09-20): 동일 구성의 keyboard set을 하나 더 운용한다.
+두 set이 가까이 있을 수 있으므로 ESB address를 분리했다.
+
+- ESB에는 pairing도 encryption도 없어 address가 set을 가르는 유일한 수단이다.
+  같은 address를 쓰면 전파 도달 범위 안에서 각 dongle이 상대 set의 half를
+  받아들인다. Half는 keypress로 깨어나 송신하므로 동시에 사용하지 않아도
+  간섭한다.
+- Set A의 address는 `charybdis_layout.dtsi`에, set B는
+  `config/esb_set_b.overlay`에 둔다. 후자는 `&esb_split`을 override하며,
+  이를 위해 node에 label을 달았다.
+- `build.yaml`에서 set B의 세 target에 `EXTRA_DTC_OVERLAY_FILE`로 적용한다.
+  한 set의 dongle과 두 half는 반드시 같은 address로 compile되어야 한다.
+- Peripheral id는 양쪽 set 모두 1과 2다. Address 안에서만 유일하면 된다.
+- `artifact-name`에 set과 role을 모두 넣었다. 잘못된 set의 firmware를 구우면
+  연결만 안 될 뿐 keyboard는 아무 신호도 주지 않으므로 파일명이 유일한 방어선이다.
+- `settings_reset`은 set과 무관하게 공용이다.
+
+세 번째 set이 필요하면 같은 방식으로 overlay 하나와 build target 세 개를 더한다.
+
 보류 중인 tuning (2026-09-19):
 
 - Sensor sampling은 아직 250 Hz가 아니라 driver 기본값인 8 ms(125 Hz)다.

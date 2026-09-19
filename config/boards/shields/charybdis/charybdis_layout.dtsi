@@ -94,12 +94,14 @@
 / {
     /*
      * ESB link shared by the dongle and both halves; all three must compile
-     * the same addresses. These are specific to this keyboard set rather than
-     * the module's example values, so a neighbouring ESB set does not collide.
-     * They are not a secret: ESB has no pairing or encryption, and the address
-     * only separates one set of devices from another.
+     * the same addresses. These are set A's. They are not a secret: ESB has no
+     * pairing or encryption, so the address is the only thing separating one
+     * set of devices from another, and a second set within radio range has to
+     * use different values or the dongles will accept each other's halves.
+     * A second set overrides this node through config/esb_set_b.overlay; the
+     * label exists so that override is possible.
      */
-    esb_split {
+    esb_split: esb_split {
         compatible = "zmk,esb-split";
         base-addr-0 = <0x9B 0x4C 0x2E 0x71>;
         base-addr-1 = <0x3D 0xA6 0x58 0xE2>;

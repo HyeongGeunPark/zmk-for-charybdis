@@ -1,0 +1,21 @@
+/*
+ * Second keyboard set.
+ *
+ * ESB has no pairing and no encryption, so the address is the only thing that
+ * tells one set from another. Two sets sharing set A's address would have each
+ * dongle accepting the other set's halves whenever both are powered within
+ * radio range -- and a half only has to be woken by a keypress to transmit, so
+ * they do not have to be in use at the same time to interfere.
+ *
+ * Applied from build.yaml through EXTRA_DTC_OVERLAY_FILE to all three targets
+ * of the set; the dongle and both halves must compile identical addresses.
+ *
+ * The peripheral ids stay 1 and 2. They only have to be unique within one
+ * address, so they need no change here.
+ */
+
+&esb_split {
+    base-addr-0 = <0x4E 0x83 0xD1 0x26>;
+    base-addr-1 = <0xA7 0x1F 0x6C 0x94>;
+    addr-prefix = <0x39 0x8D 0x52 0xB6 0x0E 0xC3 0x77 0xAB>;
+};
