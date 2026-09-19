@@ -10,20 +10,6 @@
 #include <input/processors.dtsi>
 #include <dt-bindings/zmk/input_transform.h>
 
-/*
- * The board's blue LED on P0.15 blinks continuously on the dongle. Neither ZMK
- * nor the ESB module drives that pin, so nothing turns it off either; hogging
- * it low at boot does. If it still blinks after this, something outside the
- * application is driving it and the pin is not the place to fix it.
- */
-&gpio0 {
-    blue_led_off {
-        gpio-hog;
-        gpios = <15 GPIO_ACTIVE_HIGH>;
-        output-low;
-    };
-};
-
 / {
     chosen {
         zmk,kscan = &mock_kscan;

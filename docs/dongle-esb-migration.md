@@ -304,6 +304,20 @@ Gate:
 - `build.yaml`은 dongle/left/right/settings_reset 네 target이며 각각
   `artifact-name`으로 role을 명시한다.
 
+알려진 하드웨어 동작: dongle의 LED가 약 0.5초 주기로 pulse한다. 펌웨어로 끌
+수 없다.
+
+- 두 half는 같은 board와 같은 펌웨어 baseline인데 깜빡이지 않는다. 따라서
+  bootloader가 남긴 PWM 같은 공통 원인이 아니다.
+- `&gpio0`에 gpio-hog로 P0.15를 output-low로 고정해도 멈추지 않았다. 즉
+  software가 그 pin으로 LED를 켜는 것이 아니다. 이 hog는 되돌렸다.
+- ZMK와 ESB module source 어디에도 LED 제어 code가 없다.
+- 남는 차이는 dongle만 USB 전원이고 battery가 없다는 점이다. Battery 없이 USB
+  전원만 받으면 charging IC가 충전 시도와 완료 판단을 반복하며, 그 주기가 이
+  pulse로 나타난다.
+
+대응은 물리적인 것뿐이다. 불투명 tape를 붙이거나 dongle을 시야 밖에 두면 된다.
+
 Flash 전 필요한 것:
 
 - Dongle용 nice!nano v2 보드 한 장이 추가로 필요하다.
