@@ -385,6 +385,36 @@ Gate:
 
 ### Phase 4: ESB-only final transport
 
+구현 상태 (2026-09-19): `my-keymap`에 적용했다. Phase 3이 폐기되었으므로
+dependency 추가와 transport 전환을 한 커밋에서 함께 수행한다.
+
+- Manifest에 ESB module, `badjeff/sdk-nrf`, `nrfconnect/sdk-nrfxlib`을 pin했다.
+- `esb_split` node는 `charybdis_layout.dtsi`에 둔다. 세 target이 모두 이
+  파일을 include하므로 address가 자동으로 일치한다. Module 예제 address 대신
+  이 keyboard set 전용 값을 쓴다. ESB에는 pairing이나 encryption이 없으므로
+  이 값은 비밀이 아니라 인접 set과의 충돌 방지용이다.
+- Peripheral id는 left 1, right 2이고 dongle의
+  `ZMK_SPLIT_ESB_PERIPHERAL_COUNT=2` 이하여야 한다.
+- Key position은 retry 3, input event는 retry 0이다. 놓친 motion packet은
+  이미 낡은 좌표이므로 재전송 가치가 없다.
+- `ZMK_SPLIT_ESB_AUTO_HEAL_KEY_POS_MAX`는 matrix transform의 56과 맞춘다.
+- Keymap에서 `&bt` binding을 모두 제거했다. `CONFIG_ZMK_BLE=n`이면
+  `behavior_bt.c`가 아예 build되지 않으므로 이는 선택이 아니라 필수다.
+  `&out OUT_USB`는 BLE와 무관하게 build되므로 남긴다.
+
+이 전환으로 잃는 것:
+
+- Host BLE profile 5개. Dongle은 USB 전용이 되고, 기기 전환은 dongle을 옮겨
+  꽂는 것으로 대체된다.
+- Battery 표시. BLE가 없으면 HID Battery Service가 없어 host에 잔량을 보낼
+  수단이 사라진다. `ZMK_BATTERY_REPORTING`은 peripheral이 central에 값을
+  올리는 경로로 남겨 두었으나 현재 표시 수단이 없다.
+
+되돌리려면 manifest에서 NCS를 빼고 `CONFIG_ZMK_BLE`를 되돌린 뒤 settings
+reset을 다시 해야 한다. Manifest만 남기고 BLE를 켜는 중간 상태는 build되지
+않는다(Phase 3 참고).
+
+
 Final common direction:
 
 ```text

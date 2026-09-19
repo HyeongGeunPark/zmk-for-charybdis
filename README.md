@@ -3,7 +3,10 @@
 Personal ZMK configuration for a wireless Charybdis 4x6 split keyboard with a
 PMW3610 trackball on the right half.
 
-The current configuration targets the Zephyr 4.1 based, pre-v0.4 ZMK line.
+The current configuration targets the Zephyr 4.1 based, pre-v0.4 ZMK line and
+runs as a dongle plus two peripherals, with split traffic over ESB rather than
+BLE. The dongle reaches the host over USB only; there is no host Bluetooth,
+because the ESB module cannot be compiled alongside it.
 Keyboard, split BLE, USB, Studio, and standard mouse-button behaviors are
 verified on hardware. The legacy PMW3610 module has been dropped for good; the
 trackball is being rebuilt on [badjeff/zmk-pmw3610-driver][pmw] together with
