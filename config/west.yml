@@ -4,6 +4,8 @@ manifest:
       url-base: https://github.com/zmkfirmware
     - name: badjeff
       url-base: https://github.com/badjeff
+    - name: nrfconnect
+      url-base: https://github.com/nrfconnect
   projects:
     - name: zmk
       remote: zmkfirmware
@@ -11,11 +13,28 @@ manifest:
       import: app/west.yml
     # PMW3610 driver for the Zephyr 4.1 line. Uses the pixart,pmw3610-alt
     # compatible and CONFIG_PMW3610_ALT_* so it does not collide with the
-    # native Zephyr binding. Same author as zmk-feature-split-esb, which this
-    # configuration moves to in a later phase.
+    # native Zephyr binding.
     - name: zmk-pmw3610-driver
       remote: badjeff
       revision: 44b4a76b74d293a93cec4ccb7e04cb8d29c10f93
+    # ESB split transport. Present so the dependency change can be verified on
+    # its own; the transport itself stays off (CONFIG_ZMK_SPLIT_ESB defaults to
+    # n, and config/charybdis.conf says so explicitly) until split moves off
+    # BLE. NCS is here because ESB and MPSL come from it, and it is the author's
+    # fork because stock NCS 3.1 does not pass CMake config validation against
+    # Zephyr 4.1.
+    - name: zmk-feature-split-esb
+      remote: badjeff
+      revision: 314c7cbaf4a74e1add1d6ffc8249de3e29965b8c
+    - name: sdk-nrf
+      remote: badjeff
+      revision: 9b3d2623fdcd9c0fd0284f860beea924568c9826
+      path: nrf
+    - name: nrfxlib
+      remote: nrfconnect
+      revision: dfadf17305d8f000eda9aa74a5b9ff1c5647a23e
+      repo-path: sdk-nrfxlib
+      path: nrfxlib
 
   self:
     path: config
