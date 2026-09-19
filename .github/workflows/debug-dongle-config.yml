@@ -4,9 +4,7 @@
 # with an empty value breaks the build, and nothing in the normal build log
 # says which symbol it is.
 #
-# This builds the dongle the same way the release workflow does, ignores the
-# failure, and prints the empty defines. Delete this file once the symbol is
-# known.
+# Delete this file once the symbol is known.
 name: Debug dongle config
 
 on:
@@ -39,17 +37,26 @@ jobs:
             -DZMK_CONFIG="${GITHUB_WORKSPACE}/config" \
             -DSHIELD=charybdis_dongle || true
 
-      - name: Empty CONFIG defines in autoconf.h
+      # Reported as annotations rather than plain log lines: GitHub hides
+      # Actions logs from anonymous readers even on a public repo, while the
+      # annotations REST endpoint stays readable. One annotation per finding,
+      # so no newline escaping is involved.
+      - name: Report empty CONFIG defines
         run: |
           AC=build/zephyr/include/generated/zephyr/autoconf.h
-          echo "=== defines with no value (the culprits) ==="
-          grep -nE '^#define CONFIG_[A-Za-z0-9_]+[[:space:]]*$' "$AC" || echo "(none)"
-
-      - name: Empty arguments in generated configs.c
-        run: |
           CC=build/zephyr/misc/generated/configs.c
-          echo "=== GEN_ABSOLUTE_SYM_KCONFIG with an empty value ==="
-          grep -nE 'GEN_ABSOLUTE_SYM_KCONFIG\([^,]+,[[:space:]]*\)' "$CC" || echo "(none)"
-          echo
-          echo "=== lines 28-36, where the assembler points ==="
-          sed -n '28,36p' "$CC"
+
+          found=0
+          while IFS= read -r line; do
+            found=1
+            echo "::error title=Empty define::${line}"
+          done < <(grep -nE '^#define CONFIG_[A-Za-z0-9_]+[[:space:]]*$' "$AC" || true)
+
+          while IFS= read -r line; do
+            found=1
+            echo "::error title=Empty configs.c arg::${line}"
+          done < <(grep -nE 'GEN_ABSOLUTE_SYM_KCONFIG\([^,]+,[[:space:]]*\)' "$CC" || true)
+
+          if [ "$found" = "0" ]; then
+            echo "::error title=Nothing found::no empty CONFIG define in autoconf.h"
+          fi
