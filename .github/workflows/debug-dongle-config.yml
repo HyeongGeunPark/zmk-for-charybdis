@@ -21,22 +21,22 @@ jobs:
     container:
       image: zmkfirmware/zmk-build-arm:stable
     steps:
+      # Checked out at the workspace root, the way the release workflow does
+      # it, so config/west.yml lands where west init expects it.
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          path: config
 
       - name: West init and update
         run: |
-          west init -l config
-          west update --fetch-opt=--filter=blob:none
+          west init -l "${GITHUB_WORKSPACE}/config"
+          west update --fetch-opt=--filter=tree:0
           west zephyr-export
 
       - name: Build dongle, keep going on failure
         run: |
           west build -s zmk/app -d build -b "nice_nano@2.0.0//zmk" \
             -S studio-rpc-usb-uart -- \
-            -DZMK_CONFIG="${GITHUB_WORKSPACE}/config/config" \
+            -DZMK_CONFIG="${GITHUB_WORKSPACE}/config" \
             -DSHIELD=charybdis_dongle || true
 
       - name: Empty CONFIG defines in autoconf.h
