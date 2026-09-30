@@ -131,10 +131,10 @@
             bindings = <
 &none   &none   &none   &none   &none   &none      &none   &none   &none   &none   &none   &none
 &none   &none   &none   &none   &none   &none      &none   &none   &none   &none   &none   &none
-&none   &none   &none   &none   &none   &none      &none   &kp HOME &kp UP &kp END &kp K_APP &none
-&none   &none   &none   &none   &none   &none      &none   &kp LEFT &kp DOWN &kp RIGHT &kp LANG2 &none
+&trans  &none   &none   &none   &none   &none      &none   &kp HOME &kp UP &kp END &kp K_APP &none
+&trans   &none   &none   &none   &none   &none      &none   &kp LEFT &kp DOWN &kp RIGHT &kp LANG2 &trans
                         &none   &none   &none      &none   &none
-                                &none   &none      &trans
+                                &trans  &trans     &trans
             >;
         };
 
