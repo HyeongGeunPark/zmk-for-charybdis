@@ -21,6 +21,8 @@
  */
 #define SCROLL 4
 #define SNIPE 5
+/* Keyboard-only layer, placed last so the listener's layer numbers stay put. */
+#define EXTRA 6
 
 /*
  * Shared by both halves and the dongle, so nothing here may touch nodes that
@@ -39,7 +41,7 @@
 &kp LCTRL     &kp A        &kp S        &kp D        &kp F        &kp G           &kp H        &kp J        &kp K        &kp L        &kp SEMI        &kp SQT
 &kp LSHIFT    &kp Z        &kp X        &kp C        &kp V        &kp B           &kp N        &kp M        &kp COMMA    &kp PERIOD   &kp FSLH        &kp RSHIFT
                                         &mo POINTER  &mo SYMBOLS  &kp SPACE       &kp BACKSPACE &kp ENTER
-                                                     &kp LALT     &kp LGUI        &kp RALT
+                                                     &kp LALT     &kp LGUI        &mo EXTRA
             >;
         };
 
@@ -47,9 +49,9 @@
             display-name = "Symbols";
             bindings = <
 &trans     &kp F1          &kp F2     &kp F3                &kp F4                  &kp F5          &kp F6       &kp F7       &kp F8        &kp F9           &kp F10   &mo DANGER
-&trans     &kp TILDE       &kp GRAVE  &kp LEFT_BRACE        &kp RIGHT_BRACE         &kp F11         &kp F12      &none        &kp UP        &none            &none     &none
-&trans     &kp MINUS       &kp EQUAL  &kp LEFT_PARENTHESIS  &kp RIGHT_PARENTHESIS   &kp PAGE_UP     &kp C_VOL_UP &kp LEFT     &kp DOWN      &kp RIGHT        &none     &none
-&trans     &kp UNDERSCORE  &kp PLUS   &kp LEFT_BRACKET      &kp RIGHT_BRACKET       &kp PAGE_DOWN   &kp C_VOL_DN &none        &kp LESS_THAN &kp GREATER_THAN &none     &trans
+&trans     &kp TILDE       &kp GRAVE  &kp LEFT_BRACE        &kp RIGHT_BRACE         &kp F11         &kp F12      &kp EXCL     &kp AT       &kp HASH         &kp DLLR  &none
+&trans     &kp MINUS       &kp EQUAL  &kp LEFT_PARENTHESIS  &kp RIGHT_PARENTHESIS   &kp PAGE_UP     &kp C_VOL_UP &kp RALT     &kp PRCNT     &kp CARET        &kp AMPS  &none
+&trans     &kp UNDERSCORE  &kp PLUS   &kp LEFT_BRACKET      &kp RIGHT_BRACKET       &kp PAGE_DOWN   &kp C_VOL_DN &kp ASTRK    &kp LESS_THAN &kp GREATER_THAN &kp BSLH  &trans
                                       &none                 &trans                  &trans          &kp DELETE &trans
                                                             &trans                  &trans          &trans
             >;
@@ -121,6 +123,18 @@
 &trans  &trans  &trans  &trans  &trans  &trans    &trans  &trans  &trans  &trans  &trans  &trans
                         &trans  &trans  &trans    &trans  &trans
                                 &trans  &trans    &trans
+            >;
+        };
+
+        extra_layer {
+            display-name = "Extra";
+            bindings = <
+&none   &none   &none   &none   &none   &none      &none   &none   &none   &none   &none   &none
+&none   &none   &none   &none   &none   &none      &none   &none   &none   &none   &none   &none
+&none   &none   &none   &none   &none   &none      &none   &kp HOME &kp UP &kp END &kp K_APP &none
+&none   &none   &none   &none   &none   &none      &none   &kp LEFT &kp DOWN &kp RIGHT &kp LANG2 &none
+                        &none   &none   &none      &none   &none
+                                &none   &none      &trans
             >;
         };
 
