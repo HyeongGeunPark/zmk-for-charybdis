@@ -13,22 +13,72 @@
 #
 # artifact-name is set on every entry so the role is unmistakable in the
 # merged firmware artifact, and the wrong UF2 does not end up on a board.
+#
+# DEBUG BRANCH (debug-logging): builds ONLY the diagnostic firmware for the
+# "trackball freezes for a moment" investigation. Never merge into my-keymap.
+# Every diagnostic UF2 ends in _dbg. Nothing under config/ differs from
+# my-keymap: all debug settings are the snippets and cmake-args below.
+# Procedure and log analysis: docs/debug-logging.md.
+#
+# Shared cmake-args: LOG_BUFFER_SIZE=16384 (ZMK default 8192),
+# USB_CDC_ACM_RINGBUF_SIZE (default 1024; a full ring drops bytes silently, and
+# at full trackball motion the right half writes ~32 KB/s, so it gets 16384 =
+# ~0.5 s of headroom, the dongle 8192), LOG_PROCESS_THREAD_STARTUP_DELAY_MS=5000
+# (boot logs wait for the PC to open the port), INPUT_EVENT_DUMP=y (one "input
+# event:" line per event), INPUT_THREAD_STACK_SIZE=2048 (default 1024; that
+# thread now logs).
+#
+# ZMK Studio is switched off on the dongle in the debug builds: the dongle then
+# has exactly one USB serial port and it is the log, so there is no doubt about
+# which COM port to open. Fallback if you ever need Studio back in a debug
+# build: snippet: studio-rpc-usb-uart zmk-usb-logging (one value, two
+# snippets), drop -DCONFIG_ZMK_STUDIO=n, and add -DCONFIG_USB_MAX_NUM_TRANSFERS=8.
 ---
 include:
-  # The only central: USB HID to the host, plus Studio.
+  # Dongle, quiet: ZMK's own log is cut to warnings because ZMK logs several DBG
+  # lines per trackball event. Use this one for gap analysis; the input event
+  # dump shows when each event arrived at the dongle.
   - board: nice_nano@2.0.0//zmk
     shield: charybdis_dongle
-    snippet: studio-rpc-usb-uart
-    artifact-name: charybdis_dongle
-  # Both halves are peripherals; the role comes from Kconfig.defconfig, which
-  # no longer makes the right half central.
+    snippet: zmk-usb-logging
+    cmake-args: -DCONFIG_LOG_BUFFER_SIZE=16384 -DCONFIG_LOG_PROCESS_THREAD_STARTUP_DELAY_MS=5000 -DCONFIG_INPUT_EVENT_DUMP=y -DCONFIG_INPUT_THREAD_STACK_SIZE=2048 -DCONFIG_USB_CDC_ACM_RINGBUF_SIZE=8192 -DCONFIG_ZMK_STUDIO=n -DCONFIG_ZMK_LOGGING_MINIMAL=y -DCONFIG_ZMK_LOG_LEVEL_WRN=y
+    artifact-name: charybdis_dongle_dbg
+  # Dongle, verbose: full ZMK debug log (Connected/Disconnected, connection
+  # parameters, scanning, left-half link). Too chatty for gap analysis; use it
+  # for boot and reconnect captures of 60 seconds or less, to answer whether the
+  # BLE link (interval, latency, drops) is involved.
   - board: nice_nano@2.0.0//zmk
-    shield: charybdis_left
-    artifact-name: charybdis_left
+    shield: charybdis_dongle
+    snippet: zmk-usb-logging
+    cmake-args: -DCONFIG_LOG_BUFFER_SIZE=16384 -DCONFIG_LOG_PROCESS_THREAD_STARTUP_DELAY_MS=5000 -DCONFIG_INPUT_EVENT_DUMP=y -DCONFIG_INPUT_THREAD_STACK_SIZE=2048 -DCONFIG_USB_CDC_ACM_RINGBUF_SIZE=8192 -DCONFIG_ZMK_STUDIO=n
+    artifact-name: charybdis_dongle_dbg_zmkdbg
+  # Right half (the sensor). Must be plugged into the PC to be read. The
+  # driver logs one "x/y" line per sensor read (sysworkq time); the input dump
+  # adds a second timestamp from the input thread.
   - board: nice_nano@2.0.0//zmk
     shield: charybdis_right
-    artifact-name: charybdis_right
-  # Flash this on all three boards before the first dongle firmware.
+    snippet: zmk-usb-logging
+    cmake-args: -DCONFIG_LOG_BUFFER_SIZE=16384 -DCONFIG_LOG_PROCESS_THREAD_STARTUP_DELAY_MS=5000 -DCONFIG_INPUT_EVENT_DUMP=y -DCONFIG_INPUT_THREAD_STACK_SIZE=2048 -DCONFIG_USB_CDC_ACM_RINGBUF_SIZE=16384 -DCONFIG_PMW3610_ALT_LOG_LEVEL_DBG=y
+    artifact-name: charybdis_right_dbg
+  # A/B partner of the entry above for the sensor-rest hypothesis: identical,
+  # but the sensor checks for motion every 10 ms in all REST stages instead of
+  # 40/100/500 ms (driver limits: sample 10..2550 ms, REST1 downshift >=
+  # 16 x sample, REST2 >= 128 x sample). The downshift dwell times shift a
+  # little too. Costs battery.
+  - board: nice_nano@2.0.0//zmk
+    shield: charybdis_right
+    snippet: zmk-usb-logging
+    cmake-args: -DCONFIG_LOG_BUFFER_SIZE=16384 -DCONFIG_LOG_PROCESS_THREAD_STARTUP_DELAY_MS=5000 -DCONFIG_INPUT_EVENT_DUMP=y -DCONFIG_INPUT_THREAD_STACK_SIZE=2048 -DCONFIG_USB_CDC_ACM_RINGBUF_SIZE=16384 -DCONFIG_PMW3610_ALT_LOG_LEVEL_DBG=y -DCONFIG_PMW3610_ALT_REST1_SAMPLE_TIME_MS=10 -DCONFIG_PMW3610_ALT_REST2_SAMPLE_TIME_MS=10 -DCONFIG_PMW3610_ALT_REST3_SAMPLE_TIME_MS=10
+    artifact-name: charybdis_right_dbg_fastrest
+  # Left half: not built (no sensor, would need a third USB cable). Uncomment
+  # if the dongle log shows the left link dropping.
+  # - board: nice_nano@2.0.0//zmk
+  #   shield: charybdis_left
+  #   snippet: zmk-usb-logging
+  #   cmake-args: -DCONFIG_LOG_BUFFER_SIZE=16384 -DCONFIG_USB_CDC_ACM_RINGBUF_SIZE=4096 -DCONFIG_LOG_PROCESS_THREAD_STARTUP_DELAY_MS=5000
+  #   artifact-name: charybdis_left_dbg
+  # Unchanged from my-keymap. Do not flash it during this investigation: it
+  # erases the pairings.
   - board: nice_nano@2.0.0//zmk
     shield: settings_reset
     artifact-name: settings_reset

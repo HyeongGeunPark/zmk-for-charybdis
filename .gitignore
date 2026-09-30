@@ -1,2 +1,6 @@
 test/
 .zmk/
+logs/
+__pycache__/
+firmware-dbg/
+firmware-prod/
