@@ -47,12 +47,15 @@
 
         symbols_layer {
             display-name = "Symbols";
+            /* Hangul/English is POINTER + SYMBOLS together: RALT sits on the
+               POINTER key here and on the SYMBOLS key in the pointer layer,
+               so whichever is pressed second fires it, with no combo delay. */
             bindings = <
 &trans     &kp F1          &kp F2     &kp F3                &kp F4                  &kp F5          &kp F6       &kp F7       &kp F8        &kp F9           &kp F10   &mo DANGER
-&trans     &kp TILDE       &kp GRAVE  &kp LEFT_BRACE        &kp RIGHT_BRACE         &kp F11         &kp F12      &kp EXCL     &kp AT       &kp HASH         &kp DLLR  &none
-&trans     &kp MINUS       &kp EQUAL  &kp LEFT_PARENTHESIS  &kp RIGHT_PARENTHESIS   &kp PAGE_UP     &kp C_VOL_UP &kp RALT     &kp PRCNT     &kp CARET        &kp AMPS  &none
+&trans     &kp TILDE       &kp GRAVE  &kp LEFT_BRACE        &kp RIGHT_BRACE         &kp F11         &kp F12      &kp EXCL     &kp AT       &kp HASH         &kp PIPE  &none
+&trans     &kp MINUS       &kp EQUAL  &kp LEFT_PARENTHESIS  &kp RIGHT_PARENTHESIS   &kp PAGE_UP     &kp C_VOL_UP &kp DLLR     &kp PRCNT     &kp CARET        &kp AMPS  &none
 &trans     &kp UNDERSCORE  &kp PLUS   &kp LEFT_BRACKET      &kp RIGHT_BRACKET       &kp PAGE_DOWN   &kp C_VOL_DN &kp ASTRK    &kp LESS_THAN &kp GREATER_THAN &kp BSLH  &trans
-                                      &none                 &trans                  &trans          &kp DELETE &trans
+                                      &kp RALT              &trans                  &trans          &kp DELETE &trans
                                                             &trans                  &trans          &trans
             >;
         };
@@ -81,7 +84,7 @@
 &none   &none               &none                &none                  &none                  &none      &none           &kp KP_N7 &kp KP_N8 &kp KP_N9 &none        &none
 &trans  &mo SNIPE           &mo SCROLL           &dpi (-1)              &dpi 1                 &none      &kp KP_DIVIDE   &kp KP_N4 &kp KP_N5 &kp KP_N6 &kp KP_MINUS &kp KP_PLUS
 &trans  &mkp MB4            &mkp MB5             &mkp MB1               &mkp MB2               &mkp MB3   &kp KP_MULTIPLY &kp KP_N1 &kp KP_N2 &kp KP_N3 &kp KP_DOT   &trans
-                                                 &trans                 &none                  &none      &kp KP_ENTER    &kp KP_N0
+                                                 &trans                 &kp RALT               &none      &kp KP_ENTER    &kp KP_N0
                                                                         &trans                 &trans     &trans
             >;
         };
