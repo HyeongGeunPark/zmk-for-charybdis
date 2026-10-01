@@ -1,0 +1,92 @@
+parse_config:
+  preprocess: true
+  raw_binding_map:
+    "&kp RALT": {t: 한/영}
+    "&dpi (-1)": {t: CPI, s: down}
+    "&dpi 1": {t: CPI, s: up}
+    "&mkp MB1": Click L
+    "&mkp MB2": Click R
+    "&mkp MB3": Click M
+    "&mkp MB4": Back
+    "&mkp MB5": Fwd
+    "&bootloader": Boot
+    "&out OUT_BLE": BLE
+    "&out OUT_USB": USB
+    "&bt BT_CLR": {t: BT, s: clear}
+    "&bt BT_CLR_ALL": {t: BT, s: clear all}
+  zmk_keycode_map:
+    BSLH: "\\"
+    SEMI: ";"
+    SQT: "'"
+    COMMA: ","
+    PERIOD: "."
+    FSLH: "/"
+    MINUS: "-"
+    EQUAL: "="
+    TILDE: "~"
+    GRAVE: "`"
+    UNDERSCORE: "_"
+    PLUS: "+"
+    EXCL: "!"
+    AT: "@"
+    HASH: "#"
+    DLLR: "$"
+    PRCNT: "%"
+    CARET: "^"
+    AMPS: "&"
+    ASTRK: "*"
+    PIPE: "|"
+    LEFT_BRACE: "{"
+    RIGHT_BRACE: "}"
+    LEFT_BRACKET: "["
+    RIGHT_BRACKET: "]"
+    LEFT_PARENTHESIS: "("
+    RIGHT_PARENTHESIS: ")"
+    LESS_THAN: "<"
+    GREATER_THAN: ">"
+    LCTRL: Ctrl
+    LSHIFT: Shift
+    RSHIFT: Shift
+    LALT: Alt
+    LGUI: Win
+    SPACE: Space
+    BACKSPACE: Bksp
+    ENTER: Enter
+    TAB: Tab
+    ESC: Esc
+    DELETE: Del
+    HOME: Home
+    END: End
+    PAGE_UP: PgUp
+    PAGE_DOWN: PgDn
+    UP: "↑"
+    DOWN: "↓"
+    LEFT: "←"
+    RIGHT: "→"
+    C_VOL_UP: Vol+
+    C_VOL_DN: Vol-
+    K_APP: Menu
+    LANG2: 한자
+    KP_N0: "0"
+    KP_N1: "1"
+    KP_N2: "2"
+    KP_N3: "3"
+    KP_N4: "4"
+    KP_N5: "5"
+    KP_N6: "6"
+    KP_N7: "7"
+    KP_N8: "8"
+    KP_N9: "9"
+    KP_DIVIDE: "/"
+    KP_MULTIPLY: "*"
+    KP_MINUS: "-"
+    KP_PLUS: "+"
+    KP_DOT: "."
+    KP_ENTER: Enter
+draw_config:
+  key_w: 60
+  key_h: 56
+  n_columns: 1
+  draw_key_sides: true
+  svg_extra_style: |
+    text { font-family: "Malgun Gothic", "Noto Sans KR", "SFMono-Regular", Consolas, sans-serif; }
