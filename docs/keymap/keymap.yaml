@@ -111,7 +111,7 @@ layers:
   - {type: held}
   - 한/영
   - ''
-  - Enter
+  - {t: ▽, type: trans}
   - '0'
   - {t: ▽, type: trans}
   - {t: ▽, type: trans}
