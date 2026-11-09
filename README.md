@@ -25,8 +25,7 @@ Four targets: `charybdis_dongle`, `charybdis_left`, `charybdis_right`, and
 `settings_reset`. Flash `settings_reset` on a board before its first firmware.
 
 A second keyboard set needs no configuration of its own. BLE bonding keeps
-sets apart, so two of them can sit side by side — which was not true on ESB,
-where the address had to be managed by hand.
+sets apart, so two of them can sit side by side.
 
 ## Keymap
 
@@ -66,5 +65,4 @@ keymap -c docs/keymap/config.yaml draw -j docs/keymap/layout.json \
 
 ## Documentation
 
-- [Dongle and ESB research](docs/dongle-esb-research.md)
-- [Dongle and ESB migration plan](docs/dongle-esb-migration.md)
+- [BLE dongle setup and pitfalls](docs/dongle.md)
