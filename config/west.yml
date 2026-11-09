@@ -7,9 +7,11 @@ manifest:
     - name: HyeongGeunPark
       url-base: https://github.com/HyeongGeunPark
   projects:
+    # Keep in step with the reusable workflow ref in
+    # .github/workflows/build.yml.
     - name: zmk
       remote: zmkfirmware
-      revision: 9ebbeff0a8b69a42f14aec022cdf16c7a107b9e0
+      revision: 4dd95d7840eb3d5a3f59bb29fbf1ab054715ef85
       import: app/west.yml
     # PMW3610 driver for the Zephyr 4.1 line. Uses the pixart,pmw3610-alt
     # compatible and CONFIG_PMW3610_ALT_* so it does not collide with the
