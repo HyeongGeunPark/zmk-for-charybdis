@@ -66,3 +66,5 @@ keymap -c docs/keymap/config.yaml draw -j docs/keymap/layout.json \
 ## Documentation
 
 - [BLE dongle setup and pitfalls](docs/dongle.md)
+- [Review of the upstream repository](docs/upstream-review.md): which
+  upstream commits have been read, and what was taken from them
