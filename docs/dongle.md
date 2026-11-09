@@ -56,6 +56,20 @@ raw layer 번호이므로 keymap의 `SYMBOLS`/`SCROLL`/`SNIPE` define과 손으�
 - 두 half의 battery 잔량은 동글이 가져와 host에 대신 보고한다
   (`ZMK_SPLIT_BLE_CENTRAL_BATTERY_LEVEL_FETCHING`/`_PROXY`).
 
+### 1.4 Deep sleep
+
+- 두 half는 입력 없이 5분이 지나면 deep sleep(전원 off)에 들어간다. 무선
+  마우스가 흔히 쓰는 시간이다. 설정은 `charybdis_left.conf`와
+  `charybdis_right.conf`에 같은 값으로 두고, 동글에는 넣지 않는다. 동글에는
+  깨울 키가 없다.
+- 깨우는 것은 키 입력뿐이다(`charybdis.dtsi`의 kscan `wakeup-source`).
+  트랙볼로는 깨어나지 않는다. 깨운 키 자체는 보통 입력되지 않고, 깨어난 half는
+  동글에 다시 연결해야 한다.
+- Right half에서는 트랙볼 움직임도 입력으로 친다. `ZMK_POINTING`이 켜져 있으면
+  모든 input event가 idle timer를 초기화하기 때문이다. Left half는 자기 키
+  입력만 센다.
+- 깨어나는 것은 재부팅이므로 runtime CPI가 400으로 돌아간다(§3).
+
 ## 2. 트랙볼 드라이버
 
 [badjeff/zmk-pmw3610-driver](https://github.com/badjeff/zmk-pmw3610-driver)를
