@@ -16,9 +16,6 @@
     kscan0: kscan {
         compatible = "zmk,kscan-gpio-matrix";
         label = "KSCAN";
-        /* Lets a key press bring a half back from deep sleep. Without it the
-           matrix is suspended with everything else and nothing can wake it. */
-        wakeup-source;
 
         diode-direction = "row2col";
 		row-gpios

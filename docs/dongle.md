@@ -56,19 +56,41 @@ raw layer 번호이므로 keymap의 `SYMBOLS`/`SCROLL`/`SNIPE` define과 손으�
 - 두 half의 battery 잔량은 동글이 가져와 host에 대신 보고한다
   (`ZMK_SPLIT_BLE_CENTRAL_BATTERY_LEVEL_FETCHING`/`_PROXY`).
 
-### 1.4 Deep sleep
+### 1.4 Deep sleep은 끈다
 
-- 두 half는 입력 없이 5분이 지나면 deep sleep(전원 off)에 들어간다. 무선
-  마우스가 흔히 쓰는 시간이다. 설정은 `charybdis_left.conf`와
-  `charybdis_right.conf`에 같은 값으로 두고, 동글에는 넣지 않는다. 동글에는
-  깨울 키가 없다.
-- 깨우는 것은 키 입력뿐이다(`charybdis.dtsi`의 kscan `wakeup-source`).
-  트랙볼로는 깨어나지 않는다. 깨운 키 자체는 보통 입력되지 않고, 깨어난 half는
-  동글에 다시 연결해야 한다.
+두 half 모두 `CONFIG_ZMK_SLEEP`을 켜지 않는다. 2026-11에 5분 deep sleep을
+넣었다가(`3185faf`) 하드웨어에서 써 본 뒤 되돌렸다.
+
+이유: 한 half가 잠들어 연결이 끊기면 동글이 그 half를 다시 찾으려고 스캔을
+시작한다. ZMK central은 연결되지 않은 peripheral이 하나라도 있으면
+`BT_LE_SCAN_PASSIVE`(60 ms마다 30 ms)로 스캔하고, 모두 연결될 때까지 멈추지
+않는다(`split/bluetooth/central.c`의 `start_scanning`). 동글의 라디오는
+하나라서, 스캔이 깨어 있는 다른 half와의 7.5 ms 연결과 시간을 나눠 쓴다.
+실제로 왼쪽이 잠든 동안 트랙볼 포인터가 매우 느리게 갱신되었고, 왼쪽 키를 눌러
+다시 연결하자 곧바로 정상으로 돌아왔다. 두 half는 서로 다른 입력으로 깨어
+있으므로, 한쪽만 깨어 있는 상황은 피할 수 없다.
+
+잃는 것은 어림으로 쉬는 시간 1시간마다 half당 20~40 µA다. 하루 소모로는
+왼쪽 약 3분의 1, 오른쪽 약 10~15%이며, 오른쪽은 트랙볼을 굴리는 시간이 소모를
+좌우한다(ZMK power profiler 실측값과 PMW3610 데이터시트로 계산, 측정 아님).
+
+다시 켤 때 알아둘 것:
+
+- 키로 깨우려면 kscan에 `wakeup-source`가 있어야 한다.
+- 동글에는 넣지 않는다. 깨울 키가 없고, `config/charybdis.conf`는 동글에도
+  적용되므로 half별 conf에 둔다.
+- PMW3610 드라이버는 트랙볼로 깨울 수 있게 일부러 PM action을 빼 두었다
+  ([badjeff/zmk-pmw3610-driver#6](https://github.com/badjeff/zmk-pmw3610-driver/pull/6)).
+  MOTION 핀이 level interrupt로 잠든 동안에도 켜져 남아 깨우는 신호가 된다.
+  실제로 5분 뒤 트랙볼을 굴리면 잠시 뒤 동작했다.
+- 하지만 ZMK는 잠들 때 ext-power(VCC)를 끄고, 이 센서는 그 VCC로 전원을 받는
+  것으로 보인다(부팅 때 `product id 0xFF`가 나서 지연이 필요했던 것이 근거).
+  그래서 위 동작이 실제 움직임 감지였는지, 잠들자마자 깨어나는 재부팅 반복이었는지는
+  확인하지 못했다. 트랙볼로 확실히 깨우려면 `&{/EXT_POWER} { wakeup-source; };`로
+  잠든 동안 VCC를 유지한다. 대신 VCC에 연결된 부품이 잠든 동안에도 전기를 쓴다.
+- 깨어나는 것은 재부팅이라 runtime CPI가 400으로 돌아간다(§3).
 - Right half에서는 트랙볼 움직임도 입력으로 친다. `ZMK_POINTING`이 켜져 있으면
-  모든 input event가 idle timer를 초기화하기 때문이다. Left half는 자기 키
-  입력만 센다.
-- 깨어나는 것은 재부팅이므로 runtime CPI가 400으로 돌아간다(§3).
+  모든 input event가 idle timer를 초기화한다. Left half는 자기 키 입력만 센다.
 
 ## 2. 트랙볼 드라이버
 

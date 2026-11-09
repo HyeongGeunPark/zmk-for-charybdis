@@ -75,12 +75,12 @@ git fetch https://github.com/Vzhao-L/zmk-for-charybdis.git "+refs/heads/*:refs/r
 | 원본 변경 | 적용 | 비고 |
 | --- | --- | --- |
 | 디바운스 7 ms 설정 삭제, 기본값 5 ms (`main-20250226` `4bbfafc`) | `7b476e1` | 제작자가 5 → 7 → 기본값 순으로 바꿨다 |
-| kscan `wakeup-source`와 `CONFIG_ZMK_SLEEP` (`main-wake`) | `3185faf` | 1분 대신 5분. 동글은 제외하고 두 half에만 |
 
 ### 기각
 
 | 원본 변경 | 이유 |
 | --- | --- |
+| kscan `wakeup-source`와 `CONFIG_ZMK_SLEEP` (`main-wake`) | 5분으로 적용했다가(`3185faf`) 되돌렸다. 한 half가 잠든 동안 동글의 재연결 스캔이 다른 half의 링크를 굶겨 트랙볼이 느려졌다. [dongle.md](dongle.md) §1.4 |
 | 엔코더 `steps`, `triggers-per-rotation`, `pulses-per-detent`, 엔코더 behavior `tap-ms`, 오른쪽 엔코더 추가 | 엔코더를 쓰지 않는다. 노드가 모두 disabled다 |
 | `ZMK_POINTING_DEFAULT_SCRL_VAL`, `ZMK_POINTING_DEFAULT_MOVE_VAL`, `&msc`/`&mmv`의 가속 설정, `&msc_input_listener`/`&mmv_input_listener` scaler | 마우스키 스크롤·이동 behavior(`&msc`, `&mmv`) 설정이다. 키맵에서 쓰지 않는다. 트랙볼 스크롤은 동글 listener의 processor chain이 맡는다 |
 | badjeff 드라이버 `zmk-0.3` branch, `spi1`, `pixart,pmw3610` (`main-badjeff`) | 이미 더 새 ZMK line에서 같은 저자의 `pixart,pmw3610-alt` 드라이버를 쓴다 |
