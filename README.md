@@ -68,3 +68,5 @@ keymap -c docs/keymap/config.yaml draw -j docs/keymap/layout.json \
 - [BLE dongle setup and pitfalls](docs/dongle.md)
 - [Review of the upstream repository](docs/upstream-review.md): which
   upstream commits have been read, and what was taken from them
+- [Trackball freeze recorder plan (dbgrec)](docs/dbgrec-plan.md) and its
+  [specification](docs/dbgrec/spec.md). These live only on this branch.
