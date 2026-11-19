@@ -176,6 +176,15 @@ half는 깜빡이지 않고, P0.15를 gpio-hog로 low에 고정해도 멈추지 
 Battery 없이 USB 전원만 받으면 charging IC가 충전 시도와 완료 판단을 반복하는
 것으로 본다. 불투명 tape를 붙이거나 시야 밖에 둔다.
 
+### 4.4 USB가 인식되지 않고 bootloader도 안 잡힌다
+
+증상: USB 장치로 잡히지 않고, bootloader 진입 시 적색 LED가 평소보다 약 2배
+빠르게 깜빡인다. 빠른 깜빡임은 bootloader가 USB 호스트와 열거되지 않았다는
+뜻이라 펌웨어 문제가 아니라 USB 데이터 라인 접촉 문제로 본다.
+
+해결: 다른 USB 포트에 꽂으니 인식됐다. 같은 포트에서 계속 안 잡히면 케이블을
+바꾸고, 그래도 안 되면 USB-C 커넥터 납땜을 확인한다.
+
 ## 5. Build와 flash
 
 - Build는 GitHub Actions에서만 한다. 이 PC에는 west/Zephyr SDK workspace가
