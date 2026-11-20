@@ -185,6 +185,66 @@ Battery 없이 USB 전원만 받으면 charging IC가 충전 시도와 완료 �
 해결: 다른 USB 포트에 꽂으니 인식됐다. 같은 포트에서 계속 안 잡히면 케이블을
 바꾸고, 그래도 안 되면 USB-C 커넥터 납땜을 확인한다.
 
+### 4.5 Half 하나가 끊긴 뒤 리셋 전까지 돌아오지 않는다 (미해결)
+
+증상: 2026-11-19에 right, 2026-11-20에 left가 동글에서 끊긴 뒤 다시 붙지
+않았다. 끊긴 half의 reset 버튼을 누르면 곧바로 연결된다. 펌웨어는 2026-11-09에
+구운 `4dd95d7` 빌드이고 그 뒤 열흘은 문제가 없었다.
+
+배제한 것:
+
+- 배터리 방전: reset으로 살아난다.
+- 동글: 11-20에는 동글이 USB에서 다시 잡힌 기록이 없고, half만 reset해서
+  풀렸다. 다시 부팅한 half와 끊긴 뒤 재시작한 half는 동글에 똑같은
+  advertising(high-duty directed 뒤 low-duty directed)을 보이므로, 동글 쪽이
+  막힌 상태라면 half reset으로 풀리지 않는다.
+- Deep sleep: §1.4대로 꺼져 있고, sleep 빌드라면 키 입력으로 깨어난다.
+- `9ebbeff` → `4dd95d7` 변경: input split queue 수정(zmkfirmware/zmk#3110)은
+  `zmk,input-split` node가 없는 left에는 build되지 않는다. Zephyr revision도
+  같다. `4dd95d7` 이후 upstream 14개 커밋(`4de31336`까지)에는 split BLE, 전원,
+  Zephyr 관련 변경이 없다.
+
+코드에서 확인한 것(`4dd95d7`):
+
+- Peripheral은 `recycled()` 콜백에서만 advertising을 다시 시작한다
+  (`app/src/split/bluetooth/peripheral.c`). `advertising_cb()`는 실패하면 log만
+  남기고 재시도하지 않는다.
+- 이 Zephyr는 fatal error에서 재부팅하지 않고 CPU를 멈춘다
+  (`kernel/fatal.c`의 weak `k_sys_fatal_error_handler`). ZMK는 이를 바꾸지
+  않고 watchdog도 없다.
+
+추정 원인(확정 아님, 당시 log 없음): half가 fatal error로 멈췄다. 후보는 BLE
+controller의 `BT_CTLR_ASSERT_OVERHEAD_START` 검사(기본 켜짐)로, 같은 board에서
+"hardware reset만 통한다"는 보고가 zmkfirmware/zmk#3331에 있다. 차선 후보는
+CPU는 살아 있으나 advertising이 다시 시작되지 않는 경우다.
+
+다시 생기면, **reset을 누르기 전에** 끊긴 half를 USB로 PC에 꽂는다.
+
+- 정상 half는 USB 장치 `VID_1D50&PID_615E`로 잡힌다(2026-11-19에 세 board가
+  모두 이렇게 잡혔다). 잡히면 CPU는 살아 있고 BLE만 멈춘 것이다.
+- 잡히지 않으면 CPU 정지다.
+- 확인은 이벤트 로그 `Microsoft-Windows-Kernel-PnP/Configuration`에서
+  `VID_1D50`을 찾는다. 동글의 일련번호는 `71FB7A39AFC7297C`이고 두 half는
+  `75D390A2EAA253DA`, `D5597B23C2911C17`이다(어느 쪽이 left인지는 미확인).
+
+CPU 정지로 확인되면 넣을 설정(세 target 공통, 이 Zephyr fork에 option이 있는
+것까지만 확인했고 적용해 보지는 않았다). 늦은 radio event를 assert 대신
+건너뛴다.
+
+```
+CONFIG_BT_CTLR_ADVANCED_FEATURES=y
+CONFIG_BT_CTLR_ASSERT_OVERHEAD_START=n
+```
+
+다른 fatal error까지 덮으려면 `k_sys_fatal_error_handler()`를 재정의해
+`sys_reboot()`하는 작은 module이 필요하다. `CONFIG_RESET_ON_FATAL_ERROR`는 이
+fork에 없다.
+
+동글 쪽에는 이번 증상과 무관한 미해결 버그가 둘 있다. `start_scanning()`이
+scan 시작에 실패하면 다시 scan하지 않는 것(zmkfirmware/zmk#3538)과, BLE host가
+끊길 때 battery level 배열 밖에 쓰는 것(zmkfirmware/zmk#3522, 동글을 BLE
+host에 붙여 쓸 때만 해당)이다.
+
 ## 5. Build와 flash
 
 - Build는 GitHub Actions에서만 한다. 이 PC에는 west/Zephyr SDK workspace가
