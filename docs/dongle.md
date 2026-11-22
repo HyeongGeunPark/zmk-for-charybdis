@@ -203,11 +203,6 @@ Battery 없이 USB 전원만 받으면 charging IC가 충전 시도와 완료 �
   `zmk,input-split` node가 없는 left에는 build되지 않는다. Zephyr revision도
   같다. `4dd95d7` 이후 upstream 14개 커밋(`4de31336`까지)에는 split BLE, 전원,
   Zephyr 관련 변경이 없다.
-- Prepare pipeline overflow(zmkfirmware/zmk#3480, "nRF52840 split-keyboard
-  freeze"): 수정 `10ba6d0`은 2026-08-14에 Zephyr fork의 `v4.1.0+zmk-fixes`에
-  들어갔고 그 뒤 이 branch에 새 커밋이 없다(2026-11-22 확인). ZMK는 Zephyr를
-  이 branch 이름으로 pin하므로 11-09 빌드는 이 수정을 이미 포함한다. 같은 날
-  들어간 `b2aee46`(connection update 때의 peripheral assert)도 마찬가지다.
 
 코드에서 확인한 것(`4dd95d7`):
 
@@ -218,45 +213,32 @@ Battery 없이 USB 전원만 받으면 charging IC가 충전 시도와 완료 �
   (`kernel/fatal.c`의 weak `k_sys_fatal_error_handler`). ZMK는 이를 바꾸지
   않고 watchdog도 없다.
 
-확인(2026-11-22): 끊긴 half를 reset 전에 USB로 PC에 꽂아도 아무 반응이
-없었다. 정상 half는 USB 장치 `VID_1D50&PID_615E`로 잡히므로(2026-11-19에 세
-board가 모두 이렇게 잡혔다) BLE만 멈춘 것이 아니라 CPU가 정지한 것이다.
-Advertising이 다시 시작되지 않는 경우는 이것으로 배제된다. 어느 half에서 언제
-확인했는지는 기록하지 않았다.
+추정 원인(확정 아님, 당시 log 없음): half가 fatal error로 멈췄다. 후보는 BLE
+controller의 `BT_CTLR_ASSERT_OVERHEAD_START` 검사(기본 켜짐)로, 같은 board에서
+"hardware reset만 통한다"는 보고가 zmkfirmware/zmk#3331에 있다. 차선 후보는
+CPU는 살아 있으나 advertising이 다시 시작되지 않는 경우다.
 
-원인(유력, 당시 log 없음): BLE controller의 `BT_CTLR_ASSERT_OVERHEAD_START`
-검사(기본 켜짐). Radio event의 prepare가 늦으면 event를 건너뛰는 대신 assert
-하고(`lll_peripheral.c:342`의 `LL_ASSERT_OVERHEAD`), 이것이 kernel oops가 되어
-위의 정지로 이어진다. 같은 board에서 "advertising에도 USB에도 안 보이고
-hardware reset만 통한다"는 보고와 이 설정으로 고쳤다는 댓글이
-zmkfirmware/zmk#3331에 있다. USB 무반응은 CPU 정지까지만 증명하고, 그 fatal
-error가 이 assert였다는 것은 log 없이는 확정할 수 없다.
+다시 생기면, **reset을 누르기 전에** 끊긴 half를 USB로 PC에 꽂는다.
 
-적용한 설정(`config/charybdis.conf`, 세 target 공통):
+- 정상 half는 USB 장치 `VID_1D50&PID_615E`로 잡힌다(2026-11-19에 세 board가
+  모두 이렇게 잡혔다). 잡히면 CPU는 살아 있고 BLE만 멈춘 것이다.
+- 잡히지 않으면 CPU 정지다.
+- 확인은 이벤트 로그 `Microsoft-Windows-Kernel-PnP/Configuration`에서
+  `VID_1D50`을 찾는다. 동글의 일련번호는 `71FB7A39AFC7297C`이고 두 half는
+  `75D390A2EAA253DA`, `D5597B23C2911C17`이다(어느 쪽이 left인지는 미확인).
+
+조치(2026-11-22): 끊긴 half를 reset 전에 USB에 꽂아도 반응이 없어 CPU 정지로
+보았다. zmkfirmware/zmk#3331을 참고해 아래 설정을 `config/charybdis.conf`에
+넣었다(세 target 공통). 늦은 radio event를 assert 대신 건너뛴다. 빌드
+(`c6e5f15`)의 Kconfig 출력에서 세 target 모두 적용된 것을 확인하고 펌웨어를
+board에 올렸다.
 
 ```
 CONFIG_BT_CTLR_ADVANCED_FEATURES=y
 CONFIG_BT_CTLR_ASSERT_OVERHEAD_START=n
 ```
 
-- 늦은 radio event를 assert 대신 건너뛴다. 연속으로 건너뛰지 않는 한 링크는
-  유지되고, 최악의 경우에도 supervision timeout으로 끊겼다가 다시 붙는다.
-- `BT_CTLR_ASSERT_OVERHEAD_START`는 `BT_CTLR_ADVANCED_FEATURES`가 켜져야 보이는
-  menu 안에 있다. 첫 줄이 없으면 둘째 줄은 경고 없이 버려지고 기본값 y가
-  남는다. Zephyr fork `10ba6d0`의 `Kconfig.ll_sw_split`에서 확인했다.
-- `config/charybdis.conf`는 shield 디렉터리 이름(`charybdis`)으로 선택되므로
-  left, right, 동글 빌드에 모두 들어간다(`app/boards/post_boards_shields.cmake`).
-- 같은 댓글의 `CONFIG_SOC_FLASH_NRF_PARTIAL_ERASE=y`는 넣지 않았다. Flash
-  erase가 radio event를 늦추는 것을 줄이는 설정인데, 원인을 하나씩 가리기 위해
-  남겨 둔다.
-
-이 설정을 넣은 빌드는 아직 굽지 않았다. 구운 뒤 같은 증상이 다시 생기면 원인은
-다른 fatal error다. 그때는 다시 reset 전에 USB를 꽂아 CPU 정지인지부터
-확인한다. 확인은 이벤트 로그 `Microsoft-Windows-Kernel-PnP/Configuration`에서
-`VID_1D50`을 찾는다. 동글의 일련번호는 `71FB7A39AFC7297C`이고 두 half는
-`75D390A2EAA253DA`, `D5597B23C2911C17`이다(어느 쪽이 left인지는 미확인).
-
-모든 fatal error를 덮으려면 `k_sys_fatal_error_handler()`를 재정의해
+다른 fatal error까지 덮으려면 `k_sys_fatal_error_handler()`를 재정의해
 `sys_reboot()`하는 작은 module이 필요하다. `CONFIG_RESET_ON_FATAL_ERROR`는 이
 fork에 없다.
 
