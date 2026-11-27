@@ -47,14 +47,26 @@ right half --/                                   central
    낸다. `zmk,input-listener`는 proxy가 아니라 `trackball_xy`를 구독한다.
 3. Scroll/snipe 같은 가공은 전부 동글 listener의 layer별 processor chain이다.
 
-#### 1.2.1 X와 Y를 event 하나로 묶는다 (build와 hardware 시험 전)
+Listener가 동글에 있어야 하는 이유는 두 가지다. ZMK는 input listener를
+central에만 build하고, layer state도 central의 것이다. Listener의 `layers`는
+raw layer 번호이므로 keymap의 `SYMBOLS`/`SCROLL`/`SNIPE` define과 손으로
+맞춘다.
+
+#### 1.2.1 X와 Y를 event 하나로 묶는다 (2026-11-27 hardware 확인)
 
 이유: driver는 한 프레임을 X event와 Y event로 따로 보고하고, split은 event마다
 notification을 하나씩 보낸다. 두 축이 함께 움직이면 초당 최대 약 250개가
-되는데, 7.5 ms 연결이 꾸준히 실어 나르는 양은 초당 약 266개라 여유가 6%쯤뿐이다.
-처리량이 조금만 떨어져도 right의 송신 queue(32칸)가 찬 채로 유지되어 포인터가
-0.2~0.3초 늦게 따라온다. 묶으면 프레임당 notification이 하나라 초당 최대 125개가
-되고, 트랙볼이 쓰는 radio 시간이 절반이 된다. 포인터 갱신 주기는 그대로다.
+된다(센서 프레임 주기 약 8 ms에서 계산한 값). 7.5 ms 연결이 꾸준히 실어 나르는
+양은 초당 약 266개로 추정한다(연결 event당 약 2개, Zephyr controller 코드를
+읽고 낸 추정이며 측정하지 않았다). 추정이 맞다면 여유는 6%쯤뿐이다. 처리량이
+조금만 떨어져도 right의 송신 queue(32칸)가 찬 채로 유지되어 포인터가 0.2~0.3초
+(역시 계산값) 늦게 따라온다. 묶으면 프레임당 notification이 하나라 초당 최대
+125개가 되고, 트랙볼이 쓰는 radio 시간이 절반이 된다. 포인터 갱신 주기는
+그대로다.
+
+결과(2026-11-27, 사용하며 관찰한 것이고 측정은 아니다): 동글에 BLE host를
+연결해 쓸 때 원을 그리며 굴리면 늘 나타나던 밀림이 매우 드물어졌다. 완전히
+없어지지는 않아서, 가끔 밀리는 듯한 움직임이 다시 보인다.
 
 방식: 묶기와 풀기 모두 PMW3610 driver의 fork에 있다(§2). Driver는 한 프레임의
 X와 Y를 동시에 아는 유일한 곳이라, 거기서 묶으면 X를 잡아 두고 Y를 기다리는
@@ -74,11 +86,6 @@ Flash 순서: **dongle 먼저, 그다음 right**. 새 dongle은 묶지 않은 ev
 처리하므로 옛 right와 함께 동작한다. 반대로 새 right에 옛 dongle이면
 `INPUT_REL_MISC`가 버려져 두 축이 함께 움직일 때 포인터가 움직이지 않는다.
 Left는 바뀌지 않는다.
-
-Listener가 동글에 있어야 하는 이유는 두 가지다. ZMK는 input listener를
-central에만 build하고, layer state도 central의 것이다. Listener의 `layers`는
-raw layer 번호이므로 keymap의 `SYMBOLS`/`SCROLL`/`SNIPE` define과 손으로
-맞춘다.
 
 ### 1.3 Studio와 battery
 
