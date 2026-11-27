@@ -87,6 +87,35 @@ Flash 순서: **dongle 먼저, 그다음 right**. 새 dongle은 묶지 않은 ev
 `INPUT_REL_MISC`가 버려져 두 축이 함께 움직일 때 포인터가 움직이지 않는다.
 Left는 바뀌지 않는다.
 
+#### 1.2.2 2M PHY를 켠다 (2026-11-27 적용, hardware 확인 전)
+
+이유: `packed-xy` 뒤에도 BLE host를 쓸 때 가끔 밀림이 남았다(§1.2.1). 남은
+방법 가운데 radio 시간 자체를 줄이는 것은 PHY뿐이다. Notification 하나를
+주고받는 시간은 1M에서 약 612 µs다: data 패킷 232 µs(29 byte), 응답 패킷
+80 µs(10 byte), 패킷 사이 고정 간격 150 µs 두 번. 2M에서는 패킷이 120 µs와
+44 µs가 되어 약 464 µs, 24%쯤 줄어든다. 모두 패킷 형식에서 계산한 값이고
+측정하지 않았다. 고정 간격이 절반을 차지하므로 payload를 줄이는 것으로는 거의
+줄지 않는다.
+
+두 번째 이유는 동글의 시간표다. Controller는 연결마다 매 주기에 "최대 길이
+패킷을 한 번 주고받을 시간"을 예약한다(`ull_central.c`의 `slot_us`). 동글은
+left와 right의 예약 구간을 직접 배치하지만, BLE host와의 연결은 host가 시점을
+정하므로 그 구간은 동글 시간표 위를 흘러 다니다가 half의 구간과 겹친다. 겹치면
+둘 중 하나가 그 주기를 통째로 건너뛴다(`ticker.c`의 `ticker_resolve_collision`).
+2M에서는 최대 길이 패킷(69 byte)이 664 µs에서 336 µs가 되어 예약 구간이
+짧아지므로 겹침도 줄어든다. 구간 길이와 겹침이 줄어드는 정도는 추정이다.
+
+방식: `charybdis.conf`의 `CONFIG_BT_CTLR_PHY_2M=n`을 `y`로 바꿨다. 꺼 둔 것은
+제작자 설정(`ce0730c`)에서 온 것이다. Split은 `BT_AUTO_PHY_UPDATE`를 select하므로
+연결될 때마다 host stack이 2M을 요청한다(Zephyr `conn.c`). BLE host와의 연결도
+host가 2M을 지원하면 2M이 된다.
+
+대가: 수신 감도가 약 3 dB 낮아진다. 송신 출력은 +8 dBm이다. 끊김이 늘면 이
+설정부터 되돌린다.
+
+Flash 순서: 세 보드 모두 올리되 순서는 상관없다. 한쪽만 2M을 지원하면 그
+링크는 1M으로 남는다.
+
 ### 1.3 Studio와 battery
 
 - Studio와 `studio-rpc-usb-uart` snippet은 동글에만 있다. Studio BLE
