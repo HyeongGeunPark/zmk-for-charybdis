@@ -73,6 +73,15 @@
         evt-type = <INPUT_EV_REL>;
         x-input-code = <INPUT_REL_X>;
         y-input-code = <INPUT_REL_Y>;
+
+        /* The split sends one notification per input event, so a frame that
+           moved on both axes cost two. With this the driver reports such a
+           frame as one packed event, which halves the radio time the
+           trackball takes when rolled diagonally or in circles. The dongle
+           turns it back into X and Y: trackball_xy in
+           charybdis_dongle.overlay. The property comes from our fork of the
+           driver, see config/west.yml. */
+        packed-xy;
     };
 };
 

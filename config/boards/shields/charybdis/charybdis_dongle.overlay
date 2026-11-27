@@ -37,6 +37,18 @@
     };
 
     /*
+     * The right half reports a frame that moved on both axes as one packed
+     * event to save radio time (packed-xy in charybdis_right.overlay). This
+     * turns each packed event back into an X and a Y event, and passes
+     * anything else through, so a right half that does not pack yet still
+     * works. The device comes from our fork of the PMW3610 driver.
+     */
+    trackball_xy: trackball_xy {
+        compatible = "pixart,pmw3610-alt-xy-unpack";
+        device = <&trackball_split>;
+    };
+
+    /*
      * Pointer processing lives here rather than on the half, because layer
      * state is the central's and ZMK only builds the input listener for the
      * central. The right half just forwards raw motion.
@@ -46,7 +58,7 @@
      */
     trackball_listener {
         compatible = "zmk,input-listener";
-        device = <&trackball_split>;
+        device = <&trackball_xy>;
 
         scroller {
             /* SYMBOLS and SCROLL */

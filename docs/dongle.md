@@ -40,9 +40,40 @@ right half --/                                   central
 ### 1.2 트랙볼 경로
 
 1. Right: `zmk,input-split`(reg 0)에 `device = <&trackball>`을 지정해 raw
-   motion만 보낸다.
-2. Dongle: 같은 reg의 proxy를 두고 `zmk,input-listener`가 그것을 구독한다.
+   motion만 보낸다. Driver가 두 축이 함께 움직인 프레임을 event 하나로 묶어
+   보고한다(`packed-xy`, §1.2.1).
+2. Dongle: 같은 reg의 proxy를 두고, `trackball_xy`
+   (`pixart,pmw3610-alt-xy-unpack`)가 proxy의 event를 받아 X와 Y로 풀어 다시
+   낸다. `zmk,input-listener`는 proxy가 아니라 `trackball_xy`를 구독한다.
 3. Scroll/snipe 같은 가공은 전부 동글 listener의 layer별 processor chain이다.
+
+#### 1.2.1 X와 Y를 event 하나로 묶는다 (build와 hardware 시험 전)
+
+이유: driver는 한 프레임을 X event와 Y event로 따로 보고하고, split은 event마다
+notification을 하나씩 보낸다. 두 축이 함께 움직이면 초당 최대 약 250개가
+되는데, 7.5 ms 연결이 꾸준히 실어 나르는 양은 초당 약 266개라 여유가 6%쯤뿐이다.
+처리량이 조금만 떨어져도 right의 송신 queue(32칸)가 찬 채로 유지되어 포인터가
+0.2~0.3초 늦게 따라온다. 묶으면 프레임당 notification이 하나라 초당 최대 125개가
+되고, 트랙볼이 쓰는 radio 시간이 절반이 된다. 포인터 갱신 주기는 그대로다.
+
+방식: 묶기와 풀기 모두 PMW3610 driver의 fork에 있다(§2). Driver는 한 프레임의
+X와 Y를 동시에 아는 유일한 곳이라, 거기서 묶으면 X를 잡아 두고 Y를 기다리는
+상태가 필요 없다. 처음에는 config 저장소의 input processor로 묶었으나 이 이유로
+driver로 옮겼다.
+
+- Right의 trackball node에 `packed-xy`: 두 축이 함께 움직인 프레임을
+  `INPUT_REL_MISC` event 하나로 보고한다. 값 32 bit의 위 16 bit가 X, 아래 16
+  bit가 Y다. 한 축만 움직인 프레임은 전과 같이 보고한다.
+- Dongle의 `pixart,pmw3610-alt-xy-unpack`: `INPUT_REL_MISC`를 X(`sync` 꺼짐)와
+  Y로 풀고, 나머지 event는 그대로 다시 낸다. Dongle build에서는 센서 driver가
+  꺼져 있고 이 장치만 build된다.
+- 묶는 형식은 driver 저장소의 `src/pmw3610_xy_pack.h` 한 곳에 있고 Zephyr에
+  의존하지 않는다. `tests/test_xy_pack.c`로 PC에서 시험한다.
+
+Flash 순서: **dongle 먼저, 그다음 right**. 새 dongle은 묶지 않은 event도 그대로
+처리하므로 옛 right와 함께 동작한다. 반대로 새 right에 옛 dongle이면
+`INPUT_REL_MISC`가 버려져 두 축이 함께 움직일 때 포인터가 움직이지 않는다.
+Left는 바뀌지 않는다.
 
 Listener가 동글에 있어야 하는 이유는 두 가지다. ZMK는 input listener를
 central에만 build하고, layer state도 central의 것이다. Listener의 `layers`는
@@ -94,8 +125,16 @@ raw layer 번호이므로 keymap의 `SYMBOLS`/`SCROLL`/`SNIPE` define과 손으�
 
 ## 2. 트랙볼 드라이버
 
-[badjeff/zmk-pmw3610-driver](https://github.com/badjeff/zmk-pmw3610-driver)를
-exact SHA로 pin한다.
+[badjeff/zmk-pmw3610-driver](https://github.com/badjeff/zmk-pmw3610-driver)의
+fork인
+[HyeongGeunPark/zmk-pmw3610-driver-alt](https://github.com/HyeongGeunPark/zmk-pmw3610-driver-alt)의
+`packed-xy` branch를 exact SHA로 pin한다. Fork는 upstream `main`의
+`44b4a76`(2026-04-16) 위에 `packed-xy`와 풀기 장치(§1.2.1)만 얹은 것이다.
+같은 계정의 `zmk-pmw3610-driver`는 inorichi driver의 fork로, 이력이 다른 별개의
+코드이고 지금 build에는 쓰지 않는다.
+Upstream을 따라갈 때는 그 위로 rebase한다. 2026-11-27 기준 upstream `main`은
+`44b4a76` 그대로이고, `feat-frame-cap` branch(센서 화상 capture, 실험 단계)는
+보고 경로를 건드리지 않는다.
 
 - Compatible `pixart,pmw3610-alt`와 `CONFIG_PMW3610_ALT_*` namespace를 써서
   Zephyr 4.1 native `pixart,pmw3610` driver와 충돌하지 않는다.

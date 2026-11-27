@@ -13,11 +13,14 @@ positions travelled in the clear and nothing stopped injected or replayed
 packets. BLE split bonds and encrypts. The ESB work is kept on the `esb`
 branch and the `esb-dongle-verified` tag in case that changes.
 
-The trackball runs on [badjeff/zmk-pmw3610-driver][pmw]. Snipe and drag scroll
+The trackball runs on [our fork][pmw-fork] of
+[badjeff/zmk-pmw3610-driver][pmw], which adds sending a frame that moved on
+both axes as one notification. Snipe and drag scroll
 are layer-swapped input processor chains on the dongle rather than driver
 features, so the old `PMW_*` keymap bindings are gone.
 
 [pmw]: https://github.com/badjeff/zmk-pmw3610-driver
+[pmw-fork]: https://github.com/HyeongGeunPark/zmk-pmw3610-driver-alt
 
 ## Firmware
 
